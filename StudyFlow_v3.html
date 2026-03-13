@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>StudyFlow Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#03070f;--s1:#07111e;--s2:#0d1c2e;--s3:#111f33;
+  --br:#132033;--br2:#1c2e45;
+  --teal:#0ecfc9;--gold:#c9a84c;--violet:#9b7af4;
+  --green:#1fcf8e;--amber:#f5a623;--red:#f4546a;--blue:#60a5fa;
+  --tx:#dde8f5;--tx2:#7a9ab8;--tx3:#3a5470;
+  --r:12px;--pad:20px;
+}
+html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx)}
+body::before{content:'';position:fixed;inset:0;background:linear-gradient(rgba(14,207,201,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(14,207,201,.018) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:var(--s1)}::-webkit-scrollbar-thumb{background:var(--br2);border-radius:4px}
+.app{display:grid;grid-template-columns:220px 1fr;height:100vh;position:relative;z-index:1}
+
+/* SIDEBAR */
+.sidebar{background:var(--s1);border-right:1px solid var(--br);display:flex;flex-direction:column;overflow:hidden}
+.logo{padding:16px;border-bottom:1px solid var(--br);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#0ecfc9,#9b7af4);display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 0 14px rgba(14,207,201,.3);flex-shrink:0}
+.logo-text{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;background:linear-gradient(90deg,var(--teal),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo-sub{font-size:8px;color:var(--tx3);letter-spacing:2px;text-transform:uppercase}
+.nav{flex:1;padding:6px 0;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;font-size:13px;font-weight:500;color:var(--tx2);transition:all .18s;border-left:3px solid transparent;user-select:none}
+.nav-item:hover{color:var(--tx);background:rgba(255,255,255,.025)}
+.nav-item.active{color:var(--teal);background:rgba(14,207,201,.07);border-left-color:var(--teal)}
+.nav-icon{font-size:15px;width:22px;text-align:center;flex-shrink:0}
+.nav-section{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:1.8px;padding:12px 16px 3px;font-weight:600}
+.sidebar-bottom{padding:10px 16px;border-top:1px solid var(--br);flex-shrink:0}
+.user-card{display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px;border-radius:var(--r);transition:background .18s}
+.user-card:hover{background:var(--s2)}
+.avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;background:linear-gradient(135deg,#0ecfc9,#9b7af4);color:#03070f}
+
+/* MAIN */
+.main{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 22px;border-bottom:1px solid var(--br);background:rgba(3,7,15,.95);backdrop-filter:blur(20px);flex-shrink:0;gap:12px}
+.page-title{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;background:linear-gradient(90deg,var(--teal),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.pill{display:flex;align-items:center;gap:8px;background:rgba(14,207,201,.08);border:1px solid rgba(14,207,201,.25);border-radius:10px;padding:8px 14px;cursor:pointer;transition:background .18s}
+.pill:hover{background:rgba(14,207,201,.14)}
+.pill-time{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;color:var(--teal);letter-spacing:2px}
+.pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:pulse 1.6s ease infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(14,207,201,.4)}50%{opacity:.5;box-shadow:0 0 0 6px rgba(14,207,201,0)}}
+.content{flex:1;overflow-y:auto;padding:var(--pad) 22px}
+
+/* SECTIONS */
+.section{display:none;animation:fadeUp .22s ease}.section.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--br);border-radius:var(--r);padding:var(--pad);position:relative;overflow:hidden;margin-bottom:14px}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(14,207,201,.2),transparent)}
+.card-title{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:1.8px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
+
+/* BUTTONS */
+.btn{padding:10px 18px;border-radius:10px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:linear-gradient(135deg,var(--teal),var(--violet));color:#03070f;box-shadow:0 4px 14px rgba(14,207,201,.2)}
+.btn-primary:hover{box-shadow:0 4px 20px rgba(14,207,201,.35);transform:translateY(-1px)}
+.btn-ghost{background:var(--s2);border:1px solid var(--br2);color:var(--tx2)}
+.btn-ghost:hover{border-color:var(--teal);color:var(--teal)}
+.btn-danger{background:rgba(244,84,106,.12);border:1px solid rgba(244,84,106,.3);color:var(--red)}
+.btn-ultimate{background:linear-gradient(135deg,#f5a623,#f4546a);color:#03070f;box-shadow:0 4px 14px rgba(244,84,106,.25)}
+.btn-ultimate:hover{box-shadow:0 4px 22px rgba(244,84,106,.4);transform:translateY(-1px)}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:8px}
+
+/* INPUTS */
+.inp{background:var(--s2);border:1px solid var(--br2);border-radius:10px;padding:10px 13px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;width:100%;transition:border-color .2s}
+.inp:focus{border-color:var(--teal)}.inp::placeholder{color:var(--tx3)}
+select.inp option{background:var(--s2)}
+.lbl{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:1.2px;display:block;margin-bottom:5px;font-weight:600}
+.form-group{margin-bottom:12px}
+
+/* STAT CARDS */
+.stat{background:var(--s1);border:1px solid var(--br);border-radius:var(--r);padding:14px 16px;position:relative;overflow:hidden;transition:transform .18s,border-color .18s;cursor:default}
+.stat:hover{transform:translateY(-2px)}
+.stat-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;margin-bottom:9px}
+.stat-val{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;line-height:1}
+.stat-label{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:1.2px;margin-top:3px}
+.stat-delta{font-size:11px;font-weight:600;margin-top:4px}
+
+/* TASK ITEMS */
+.task-item{background:var(--s2);border:1px solid var(--br);border-radius:10px;padding:11px 13px;display:flex;align-items:center;gap:10px;margin-bottom:7px;transition:border-color .18s}
+.task-item:hover{border-color:var(--br2)}
+.task-cb{width:17px;height:17px;border-radius:5px;border:2px solid var(--br2);flex-shrink:0;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;font-size:10px}
+.task-cb.done{background:var(--green);border-color:var(--green);color:#03070f}
+.task-text{flex:1;font-size:13px;font-weight:500;min-width:0}
+.task-text.done-text{text-decoration:line-through;color:var(--tx3)}
+.task-subject{font-size:10px;color:var(--tx3);margin-top:2px}
+.pri-badge{padding:2px 7px;border-radius:5px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;flex-shrink:0}
+.xp-chip{font-size:10px;color:var(--gold);display:flex;align-items:center;gap:2px;flex-shrink:0}
+.del-btn{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px;transition:color .18s;flex-shrink:0}
+.del-btn:hover{color:var(--red)}
+
+/* ── FOCUS / POMODORO ── */
+.pom-ring{position:relative;width:210px;height:210px;margin:0 auto 16px}
+.pom-ring svg{transform:rotate(-90deg)}
+.pom-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.pom-time-big{font-family:'JetBrains Mono',monospace;font-size:44px;font-weight:700;color:var(--teal);letter-spacing:3px;line-height:1}
+.pom-mode-label{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:1.5px;margin-top:4px}
+.pom-controls{display:flex;gap:8px;justify-content:center;margin:14px 0}
+.pom-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--br2);background:var(--s2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .18s;color:var(--tx)}
+.pom-btn.play{background:linear-gradient(135deg,var(--teal),var(--violet));border:none;color:#03070f;font-size:20px;width:54px;height:54px}
+.pom-btn.reset-btn{border-color:rgba(244,84,106,.4);color:var(--red)}
+.pom-btn:hover{border-color:var(--teal);transform:scale(1.06)}
+.pom-btn.reset-btn:hover{border-color:var(--red);background:rgba(244,84,106,.1)}
+.mode-tabs{display:flex;gap:5px;justify-content:center;margin-bottom:14px;flex-wrap:wrap}
+.mode-tab{padding:6px 12px;border-radius:8px;border:1px solid var(--br2);background:var(--s2);color:var(--tx2);font-size:11px;font-weight:600;cursor:pointer;transition:all .18s}
+.mode-tab.active{background:rgba(14,207,201,.12);border-color:var(--teal);color:var(--teal)}
+.mode-tab.ultimate-tab{border-color:rgba(244,84,106,.3);color:var(--amber)}
+.mode-tab.ultimate-tab.active{background:rgba(244,84,106,.12);border-color:var(--red);color:var(--red)}
+.pom-session-dots{display:flex;gap:5px;justify-content:center;margin-bottom:12px}
+.pom-dot{width:9px;height:9px;border-radius:50%;background:var(--br2);transition:background .3s}
+.pom-dot.done{background:var(--teal)}.pom-dot.current{background:var(--gold)}
+.dw-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.dw-stat{background:var(--s2);border-radius:10px;padding:10px;text-align:center}
+.dw-val{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--teal)}
+.dw-lbl{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-top:2px}
+
+/* ULTIMATE FOCUS special panel */
+.ultimate-panel{background:linear-gradient(135deg,rgba(244,84,106,.07),rgba(245,166,35,.05));border:1px solid rgba(244,84,106,.25);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.ultimate-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--amber);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.time-input-row{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.time-inp{background:var(--s2);border:1px solid rgba(244,84,106,.3);border-radius:8px;padding:8px 10px;color:var(--amber);font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;text-align:center;outline:none;width:70px}
+.time-inp:focus{border-color:var(--red)}
+.time-sep{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--tx3)}
+.preset-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.preset-btn{padding:5px 11px;border-radius:7px;border:1px solid rgba(244,84,106,.25);background:rgba(244,84,106,.07);color:var(--amber);font-size:11px;font-weight:600;cursor:pointer;transition:all .18s}
+.preset-btn:hover{background:rgba(244,84,106,.18);border-color:var(--red)}
+.preset-btn.active{background:rgba(244,84,106,.22);border-color:var(--red);color:var(--red)}
+
+/* MUSIC PLAYER */
+.music-player-wrap{background:var(--s2);border:1px solid var(--br2);border-radius:var(--r);padding:16px}
+.music-upload-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:10px;border:2px dashed var(--br2);background:none;color:var(--tx2);font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif;margin-bottom:12px}
+.music-upload-btn:hover{border-color:var(--teal);color:var(--teal)}
+.now-playing{display:flex;align-items:center;gap:12px;padding:12px;background:var(--s1);border-radius:10px;border:1px solid var(--br);margin-bottom:12px}
+.track-art{width:46px;height:46px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px}
+.track-art.playing{animation:spin-slow 8s linear infinite}
+@keyframes spin-slow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.track-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--tx)}
+.track-artist{font-size:11px;color:var(--tx3);margin-top:2px}
+.mc-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.mc-btn{background:none;border:none;color:var(--tx2);cursor:pointer;padding:6px;border-radius:6px;transition:all .18s;font-size:18px;display:flex;align-items:center;justify-content:center}
+.mc-btn:hover{color:var(--teal);background:rgba(14,207,201,.08)}
+.mc-play{width:40px;height:40px;border-radius:50%;background:var(--teal);color:#03070f !important;font-size:16px;flex-shrink:0}
+.mc-play:hover{background:var(--violet) !important;color:#fff !important}
+.prog-wrap{flex:1;cursor:pointer;padding:8px 0}
+.prog-bar-m{height:4px;background:var(--br2);border-radius:2px;overflow:hidden;pointer-events:none}
+.prog-fill-m{height:100%;background:linear-gradient(90deg,var(--teal),var(--violet));border-radius:2px;width:0%;transition:width .4s linear}
+.time-row-m{display:flex;justify-content:space-between;font-size:9px;color:var(--tx3);margin-top:3px}
+.vol-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.vol-s{flex:1;-webkit-appearance:none;appearance:none;height:3px;background:var(--br2);border-radius:2px;outline:none;cursor:pointer}
+.vol-s::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--teal);cursor:pointer}
+.playlist-wrap{max-height:200px;overflow-y:auto}
+.pl-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:background .18s}
+.pl-item:hover{background:var(--s3)}
+.pl-item.playing{background:rgba(14,207,201,.1);color:var(--teal)}
+.pl-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);min-width:18px;text-align:right}
+.pl-name{font-size:12px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.eq-bars{display:flex;align-items:flex-end;gap:2px;height:14px}
+.eq-bar{width:3px;border-radius:1px;background:var(--teal);animation:eq .6s ease infinite alternate}
+.eq-bar:nth-child(2){animation-delay:.15s;height:8px}
+.eq-bar:nth-child(3){animation-delay:.3s;height:12px}
+@keyframes eq{from{height:4px}to{height:13px}}
+.shuffle-btn{padding:4px 8px;border-radius:6px;border:1px solid var(--br2);background:none;color:var(--tx3);font-size:11px;cursor:pointer;transition:all .18s}
+.shuffle-btn.on{border-color:var(--teal);color:var(--teal);background:rgba(14,207,201,.08)}
+
+/* CALENDAR */
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.cal-nav{background:none;border:none;color:var(--tx2);cursor:pointer;font-size:20px;padding:4px 10px;border-radius:8px;transition:color .18s}
+.cal-nav:hover{color:var(--teal)}
+.cal-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--teal)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-dow{text-align:center;font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;padding:5px 0;font-weight:600}
+.cal-day{aspect-ratio:1;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .18s;border:1px solid transparent;position:relative;font-size:12px;font-weight:500}
+.cal-day:hover{background:var(--s2);border-color:var(--br)}
+.cal-day.today{background:rgba(14,207,201,.12);border-color:rgba(14,207,201,.4);color:var(--teal);font-weight:700}
+.cal-day.selected{background:var(--teal);color:#03070f;font-weight:700;border-color:var(--teal)}
+.cal-day.other-month{color:var(--tx3);opacity:.35}
+.cal-day.has-item::after{content:'';position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--gold)}
+
+/* CALENDAR TODO */
+.cal-todo-list{max-height:280px;overflow-y:auto}
+.cal-todo-item{display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(--s2);border:1px solid var(--br);border-radius:9px;margin-bottom:6px}
+.cal-todo-cb{width:16px;height:16px;border-radius:4px;border:2px solid var(--br2);flex-shrink:0;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;font-size:9px}
+.cal-todo-cb.done{background:var(--green);border-color:var(--green);color:#03070f}
+.cal-todo-text{flex:1;font-size:12px;font-weight:500}
+.cal-todo-text.done-text{text-decoration:line-through;color:var(--tx3)}
+.cal-todo-date{font-size:10px;color:var(--tx3);flex-shrink:0}
+
+/* GROUPS */
+.group-card{background:var(--s2);border:1px solid var(--br);border-radius:var(--r);padding:14px;margin-bottom:10px;transition:border-color .18s}
+.group-card:hover{border-color:var(--br2)}
+.group-emoji{width:42px;height:42px;background:var(--s3);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.competitor-card{background:var(--s2);border:1px solid var(--br);border-radius:var(--r);padding:13px;margin-bottom:9px;display:flex;align-items:center;gap:11px}
+.vs-badge{background:rgba(244,84,106,.15);border:1px solid rgba(244,84,106,.3);color:var(--red);padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700}
+
+/* PROFILE */
+.profile-avatar-big{width:78px;height:78px;border-radius:50%;background:linear-gradient(135deg,#0ecfc9,#9b7af4);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#03070f;margin:0 auto 10px;box-shadow:0 0 22px rgba(14,207,201,.3)}
+.uid-box{display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--br2);border-radius:10px;padding:10px 14px;cursor:pointer;transition:border-color .18s;max-width:320px;margin:0 auto}
+.uid-box:hover{border-color:var(--teal)}
+.uid-text{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--teal);flex:1;letter-spacing:1px}
+.badge-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.badge-item{background:var(--s2);border:1px solid var(--br);border-radius:9px;padding:10px 6px;text-align:center;transition:border-color .18s}
+.badge-item.earned{border-color:rgba(201,168,76,.3);background:rgba(201,168,76,.05)}
+.badge-item.locked{opacity:.3;filter:grayscale(1)}
+.badge-emoji{font-size:22px;margin-bottom:3px}
+.badge-name{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.7px}
+
+/* ANALYTICS BARS */
+.bar-chart{display:flex;align-items:flex-end;gap:7px;height:150px;padding:0 2px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bar-outer{flex:1;width:100%;background:var(--s2);border-radius:6px;overflow:hidden;display:flex;align-items:flex-end}
+.bar-inner{width:100%;border-radius:6px;transition:height 1s cubic-bezier(.34,1.56,.64,1)}
+.bar-lbl{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.4px}
+.bar-val{font-size:9px;color:var(--tx2);font-family:'JetBrains Mono',monospace}
+.prog-track{height:5px;background:var(--s2);border-radius:3px;overflow:hidden;margin-top:6px}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--violet));border-radius:3px;transition:width .8s ease}
+.xp-ring-wrap{display:flex;align-items:center;gap:18px}
+.subj-bar{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.subj-bar-label{font-size:12px;color:var(--tx2);width:85px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.subj-bar-track{flex:1;height:5px;background:var(--s2);border-radius:3px;overflow:hidden}
+.subj-bar-fill{height:100%;border-radius:3px;transition:width .8s ease}
+.subj-bar-pct{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);min-width:28px;text-align:right}
+.streak-dot{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700}
+
+/* AI CHAT */
+.ai-chat{display:flex;flex-direction:column;height:360px;background:var(--s2);border-radius:var(--r);overflow:hidden;border:1px solid var(--br)}
+.ai-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:9px}
+.ai-msg{max-width:75%;padding:9px 12px;border-radius:10px;font-size:13px;line-height:1.5}
+.ai-msg.user{background:rgba(14,207,201,.12);border:1px solid rgba(14,207,201,.2);color:var(--tx);margin-left:auto;border-radius:10px 10px 2px 10px}
+.ai-msg.bot{background:var(--s3);border:1px solid var(--br);color:var(--tx2);border-radius:10px 10px 10px 2px}
+.ai-input-row{display:flex;gap:7px;padding:10px;border-top:1px solid var(--br);background:var(--s1)}
+.ai-inp{flex:1;background:var(--s2);border:1px solid var(--br2);border-radius:8px;padding:8px 12px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .18s}
+.ai-inp:focus{border-color:var(--teal)}
+.ai-inp::placeholder{color:var(--tx3)}
+
+/* MODALS */
+.modal-bg{position:fixed;inset:0;background:rgba(3,7,15,.78);backdrop-filter:blur(8px);z-index:100;display:none;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--s1);border:1px solid var(--br2);border-radius:16px;padding:22px;width:90%;max-width:450px;position:relative;animation:fadeUp .2s ease}
+.modal-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;margin-bottom:14px}
+.modal-close{position:absolute;top:13px;right:13px;background:none;border:none;color:var(--tx3);cursor:pointer;font-size:19px;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:color .18s}
+.modal-close:hover{color:var(--tx)}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--s1);border:1px solid var(--green);border-radius:10px;padding:11px 15px;font-size:13px;color:var(--green);z-index:200;display:none;align-items:center;gap:7px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.toast.show{display:flex;animation:fadeUp .2s ease}
+
+/* Music section visualizer */
+.vis-bars{display:flex;align-items:flex-end;gap:3px;height:40px;padding:0 4px}
+.vis-bar{flex:1;border-radius:2px;background:linear-gradient(to top,var(--teal),var(--violet));transition:height .1s ease}
+.genre-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--br2);background:var(--s2);color:var(--tx2);font-size:11px;font-weight:600;cursor:pointer;transition:all .18s}
+.genre-btn.active{background:rgba(14,207,201,.12);border-color:var(--teal);color:var(--teal)}
+
+/* AI QUICK BUTTONS */
+.ai-quick-btn{background:var(--s1);border:1px solid var(--br);border-radius:12px;padding:14px 8px;color:var(--tx2);font-family:'DM Sans',sans-serif;font-size:20px;cursor:pointer;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:5px;width:100%}
+.ai-quick-btn span{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px}
+.ai-quick-btn:hover{border-color:var(--teal);color:var(--teal);background:rgba(14,207,201,.07);transform:translateY(-2px)}
+
+/* GROUP CHAT */
+.grp-side-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;cursor:pointer;transition:all .18s;border:1px solid transparent;background:var(--s2)}
+.grp-side-item:hover{border-color:var(--br2);background:var(--s3)}
+.grp-side-item.active{border-color:var(--teal);background:rgba(14,207,201,.08)}
+.grp-side-badge{font-size:9px;background:var(--red);color:#fff;border-radius:5px;padding:2px 6px;font-weight:700;margin-left:auto;flex-shrink:0}
+.chat-bubble{display:flex;flex-direction:column;max-width:72%;animation:fadeUp .15s ease}
+.chat-bubble.mine{align-self:flex-end;align-items:flex-end}
+.chat-bubble.theirs{align-self:flex-start;align-items:flex-start}
+.chat-bubble-inner{padding:10px 13px;border-radius:14px;font-size:13px;line-height:1.45;word-break:break-word}
+.chat-bubble.mine .chat-bubble-inner{background:linear-gradient(135deg,rgba(14,207,201,.18),rgba(155,122,244,.12));border:1px solid rgba(14,207,201,.25);color:var(--tx);border-radius:14px 14px 4px 14px}
+.chat-bubble.theirs .chat-bubble-inner{background:var(--s2);border:1px solid var(--br);color:var(--tx2);border-radius:14px 14px 14px 4px}
+.chat-meta{font-size:10px;color:var(--tx3);margin-top:3px;display:flex;align-items:center;gap:5px}
+.chat-date-sep{text-align:center;font-size:10px;color:var(--tx3);padding:8px 0;display:flex;align-items:center;gap:8px}
+.chat-date-sep::before,.chat-date-sep::after{content:'';flex:1;height:1px;background:var(--br)}
+.chat-system{text-align:center;font-size:11px;color:var(--tx3);padding:4px 0;font-style:italic}
+.qr-btn{padding:4px 10px;border-radius:16px;border:1px solid var(--br2);background:var(--s2);color:var(--tx2);font-size:11px;cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.qr-btn:hover{border-color:var(--teal);color:var(--teal);background:rgba(14,207,201,.08)}
+.comp-side-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;background:var(--s2);border:1px solid var(--br);margin-bottom:6px}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ═══ SIDEBAR ═══ -->
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">📚</div>
+    <div><div class="logo-text">StudyFlow</div><div class="logo-sub">Pro</div></div>
+  </div>
+  <div class="nav">
+    <div class="nav-section">Main</div>
+    <div class="nav-item active" data-page="dashboard" onclick="nav('dashboard')"><span class="nav-icon">🏠</span>Dashboard</div>
+    <div class="nav-item" data-page="tasks" onclick="nav('tasks')"><span class="nav-icon">✅</span>Tasks</div>
+    <div class="nav-item" data-page="focus" onclick="nav('focus')"><span class="nav-icon">⏱️</span>Focus Mode</div>
+    <div class="nav-section">Tools</div>
+    <div class="nav-item" data-page="music" onclick="nav('music')"><span class="nav-icon">🎵</span>Music</div>
+    <div class="nav-item" data-page="ai" onclick="nav('ai')"><span class="nav-icon">🧠</span>AI Studio</div>
+    <div class="nav-item" data-page="calendar" onclick="nav('calendar')"><span class="nav-icon">📅</span>Calendar &amp; To-Do</div>
+    <div class="nav-item" data-page="analytics" onclick="nav('analytics')"><span class="nav-icon">📊</span>Analytics</div>
+    <div class="nav-section">Social</div>
+    <div class="nav-item" data-page="groups" onclick="nav('groups')"><span class="nav-icon">👥</span>Study Groups</div>
+    <div class="nav-item" data-page="profile" onclick="nav('profile')"><span class="nav-icon">👤</span>Profile</div>
+    <div class="nav-section">Account</div>
+    <div class="nav-item" data-page="settings" onclick="nav('settings')"><span class="nav-icon">⚙️</span>Settings</div>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="user-card" onclick="nav('profile')">
+      <div class="avatar" id="sidebarAvatar">📚</div>
+      <div>
+        <div style="font-size:13px;font-weight:600" id="sidebarName">Loading…</div>
+        <div style="font-size:10px;color:var(--tx3)" id="sidebarLevel">Lv 1</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">Dashboard</div>
+    <div class="topbar-right">
+      <div class="pill" onclick="nav('focus')">
+        <div class="pulse-dot" id="pomDot" style="display:none"></div>
+        <div>
+          <div style="font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px" id="pomLabel">Focus Mode</div>
+          <div style="font-size:9px;color:var(--gold);font-weight:600" id="pomTask">Click to begin</div>
+        </div>
+        <div class="pill-time" id="topbarTimer">25:00</div>
+      </div>
+      <div style="font-size:19px;cursor:pointer" onclick="nav('profile')" id="topbarAvatar">📚</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <div class="section active" id="s-dashboard">
+      <div class="grid4" style="margin-bottom:14px">
+        <div class="stat" onmouseenter="this.style.borderColor='#0ecfc9'" onmouseleave="this.style.borderColor='var(--br)'">
+          <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(14,207,201,.4),transparent)"></div>
+          <div class="stat-icon" style="background:rgba(14,207,201,.1);border:1px solid rgba(14,207,201,.2)">⏱️</div>
+          <div class="stat-val" id="d-mins">0</div><div class="stat-label">Focus Minutes</div>
+          <div class="stat-delta" style="color:var(--green)">This week</div>
+        </div>
+        <div class="stat" onmouseenter="this.style.borderColor='#9b7af4'" onmouseleave="this.style.borderColor='var(--br)'">
+          <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(155,122,244,.4),transparent)"></div>
+          <div class="stat-icon" style="background:rgba(155,122,244,.1);border:1px solid rgba(155,122,244,.2)">✅</div>
+          <div class="stat-val" id="d-tasks">0</div><div class="stat-label">Tasks Done</div>
+          <div class="stat-delta" style="color:var(--violet)">Completed</div>
+        </div>
+        <div class="stat" onmouseenter="this.style.borderColor='#f5a623'" onmouseleave="this.style.borderColor='var(--br)'">
+          <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(245,166,35,.4),transparent)"></div>
+          <div class="stat-icon" style="background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.2)">🔥</div>
+          <div class="stat-val" id="d-streak">0</div><div class="stat-label">Day Streak</div>
+          <div class="stat-delta" style="color:var(--amber)">Best: <span id="d-best">0</span>d</div>
+        </div>
+        <div class="stat" onmouseenter="this.style.borderColor='#c9a84c'" onmouseleave="this.style.borderColor='var(--br)'">
+          <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.4),transparent)"></div>
+          <div class="stat-icon" style="background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2)">⚡</div>
+          <div class="stat-val" id="d-xp">0</div><div class="stat-label">Total XP</div>
+          <div class="stat-delta" style="color:var(--gold)">Level <span id="d-lvl">1</span></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div>
+          <div class="card">
+            <div class="card-title">📊 Weekly Focus</div>
+            <div class="bar-chart" id="dashChart"></div>
+            <div style="display:flex;gap:7px;margin-top:5px" id="dashChartLabels"></div>
+          </div>
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div class="card-title" style="margin-bottom:0">✅ Today's Tasks</div>
+              <button class="btn btn-ghost btn-sm" onclick="nav('tasks')">All →</button>
+            </div>
+            <div id="dashTaskPreview"></div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title">⚡ XP Progress</div>
+            <div class="xp-ring-wrap">
+              <svg width="96" height="96" viewBox="0 0 96 96" style="flex-shrink:0">
+                <circle cx="48" cy="48" r="40" fill="none" stroke="var(--s2)" stroke-width="7"/>
+                <circle id="xpArcD" cx="48" cy="48" r="40" fill="none" stroke="url(#xpGD)" stroke-width="7" stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="251" transform="rotate(-90 48 48)" style="transition:stroke-dashoffset 1.2s ease"/>
+                <defs><linearGradient id="xpGD" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0ecfc9"/><stop offset="100%" stop-color="#9b7af4"/></linearGradient></defs>
+                <text x="48" y="45" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="13" font-weight="700" fill="#0ecfc9" id="xpPctD">0%</text>
+                <text x="48" y="57" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="7" fill="#3a5470" letter-spacing="1">LV <tspan id="xpLvlD">1</tspan></text>
+              </svg>
+              <div style="flex:1">
+                <div style="font-family:'Playfair Display',serif;font-size:15px;font-weight:700;margin-bottom:7px" id="xpTitleD">Novice Scholar</div>
+                <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px">
+                  <div style="padding:2px 8px;border-radius:5px;background:rgba(14,207,201,.1);border:1px solid rgba(14,207,201,.2);color:var(--teal);font-size:10px;font-weight:600">⚡ <span id="xpTotalD">0</span></div>
+                  <div style="padding:2px 8px;border-radius:5px;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.2);color:var(--amber);font-size:10px;font-weight:600">🔥 <span id="streakD">0</span>d</div>
+                </div>
+                <div style="font-size:10px;color:var(--tx3)" id="xpNextD">0 XP to next</div>
+                <div class="prog-track"><div class="prog-fill" id="xpBarD" style="width:0%"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">📚 Subject Breakdown</div>
+            <div id="dashSubjects"></div>
+          </div>
+          <div class="card" style="background:linear-gradient(135deg,rgba(245,166,35,.05),rgba(244,84,106,.04));border-color:rgba(245,166,35,.2)">
+            <div class="card-title">🔥 Streak</div>
+            <div style="display:flex;align-items:center;gap:14px">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:38px;font-weight:700;color:var(--amber);line-height:1" id="dashStreakBig">0</div>
+              <div style="flex:1">
+                <div style="font-size:10px;color:var(--tx3);margin-bottom:5px">This week</div>
+                <div style="display:flex;gap:4px" id="dashStreakDots"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TASKS ═══ -->
+    <div class="section" id="s-tasks">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-size:13px;color:var(--tx2)" id="taskCount">0 tasks</div>
+        <button class="btn btn-primary" onclick="openModal('addTaskModal')">+ Add Task</button>
+      </div>
+      <div style="display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="filterTasks('all')" id="fAll" style="border-color:var(--teal);color:var(--teal)">All</button>
+        <button class="btn btn-ghost btn-sm" onclick="filterTasks('todo')" id="fTodo">To Do</button>
+        <button class="btn btn-ghost btn-sm" onclick="filterTasks('in_progress')" id="fProg">In Progress</button>
+        <button class="btn btn-ghost btn-sm" onclick="filterTasks('done')" id="fDone">Done</button>
+      </div>
+      <div id="taskListFull"></div>
+    </div>
+
+    <!-- ═══ FOCUS MODE ═══ -->
+    <div class="section" id="s-focus">
+      <div class="grid2">
+        <div>
+          <div class="card" style="text-align:center">
+            <div class="card-title" style="justify-content:center">⏱️ Focus Timer</div>
+            <div class="mode-tabs">
+              <div class="mode-tab active" onclick="setMode('pomodoro')">🍅 Pomodoro</div>
+              <div class="mode-tab" onclick="setMode('deep')">🧠 Deep Work</div>
+              <div class="mode-tab" onclick="setMode('short')">☕ Short Break</div>
+              <div class="mode-tab" onclick="setMode('long')">🛋️ Long Break</div>
+              <div class="mode-tab ultimate-tab" onclick="setMode('ultimate')">🔥 Ultimate</div>
+            </div>
+
+            <!-- Ultimate Focus Panel (shown only in ultimate mode) -->
+            <div class="ultimate-panel" id="ultimatePanel" style="display:none">
+              <div class="ultimate-title">🔥 Ultimate Focus Timer</div>
+              <div style="font-size:11px;color:var(--tx2);margin-bottom:10px">Set any duration — no interruptions mode</div>
+              <div class="time-input-row" style="justify-content:center">
+                <div>
+                  <div style="font-size:9px;color:var(--tx3);text-align:center;margin-bottom:3px;text-transform:uppercase;letter-spacing:1px">Hours</div>
+                  <input type="number" class="time-inp" id="ult-h" min="0" max="23" value="0" oninput="applyUltimate()"/>
+                </div>
+                <div class="time-sep">:</div>
+                <div>
+                  <div style="font-size:9px;color:var(--tx3);text-align:center;margin-bottom:3px;text-transform:uppercase;letter-spacing:1px">Minutes</div>
+                  <input type="number" class="time-inp" id="ult-m" min="0" max="59" value="45" oninput="applyUltimate()"/>
+                </div>
+                <div class="time-sep">:</div>
+                <div>
+                  <div style="font-size:9px;color:var(--tx3);text-align:center;margin-bottom:3px;text-transform:uppercase;letter-spacing:1px">Seconds</div>
+                  <input type="number" class="time-inp" id="ult-s" min="0" max="59" value="0" oninput="applyUltimate()"/>
+                </div>
+              </div>
+              <div class="preset-row" style="justify-content:center">
+                <div class="preset-btn" onclick="setUltPreset(0,45,0)">45 min</div>
+                <div class="preset-btn" onclick="setUltPreset(1,0,0)">1 hr</div>
+                <div class="preset-btn" onclick="setUltPreset(1,30,0)">1.5 hr</div>
+                <div class="preset-btn" onclick="setUltPreset(2,0,0)">2 hr</div>
+                <div class="preset-btn" onclick="setUltPreset(3,0,0)">3 hr</div>
+                <div class="preset-btn" onclick="setUltPreset(4,0,0)">4 hr</div>
+              </div>
+            </div>
+
+            <div class="pom-ring">
+              <svg width="210" height="210" viewBox="0 0 210 210">
+                <circle cx="105" cy="105" r="94" fill="none" stroke="var(--s2)" stroke-width="9"/>
+                <circle id="pomArc" cx="105" cy="105" r="94" fill="none" stroke="url(#pomGrad)" stroke-width="9" stroke-linecap="round" stroke-dasharray="591" stroke-dashoffset="0" transform="rotate(-90 105 105)" style="transition:stroke-dashoffset .5s linear"/>
+                <defs>
+                  <linearGradient id="pomGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop id="pomGradStart" offset="0%" stop-color="#0ecfc9"/>
+                    <stop id="pomGradEnd" offset="100%" stop-color="#9b7af4"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="pom-center">
+                <div class="pom-time-big" id="pomDisplay">25:00</div>
+                <div class="pom-mode-label" id="pomModeLabel">Work Session</div>
+              </div>
+            </div>
+
+            <div class="pom-session-dots" id="pomDots"></div>
+
+            <div class="pom-controls">
+              <button class="pom-btn reset-btn" onclick="resetPom()" title="Reset timer">↺</button>
+              <button class="pom-btn" onclick="pomSkipBack()" title="Restart session">⟪</button>
+              <button class="pom-btn play" id="pomPlayBtn" onclick="togglePom()">▶</button>
+              <button class="pom-btn" onclick="pomSkip()" title="Skip session">⟫</button>
+              <button class="pom-btn" onclick="stopPom()" title="Stop & end session" style="font-size:13px;color:var(--red);border-color:rgba(244,84,106,.3)">■</button>
+            </div>
+
+            <div style="margin-bottom:10px;text-align:left">
+              <label class="lbl">Linked task</label>
+              <select class="inp" id="pomTaskSelect"><option value="">— Select a task —</option></select>
+            </div>
+            <div class="dw-stats">
+              <div class="dw-stat"><div class="dw-val" id="pomSessions">0</div><div class="dw-lbl">Sessions</div></div>
+              <div class="dw-stat"><div class="dw-val" id="pomMins">0</div><div class="dw-lbl">Minutes</div></div>
+              <div class="dw-stat"><div class="dw-val" id="pomScore">—</div><div class="dw-lbl">Focus Score</div></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <!-- Mini music player in focus -->
+          <div class="card">
+            <div class="card-title">🎵 Now Playing</div>
+            <div id="focusMusicMini">
+              <div style="font-size:12px;color:var(--tx3);text-align:center;padding:14px">No music playing · <span style="color:var(--teal);cursor:pointer" onclick="nav('music')">Open Music →</span></div>
+            </div>
+          </div>
+          <!-- Focus notes -->
+          <div class="card">
+            <div class="card-title">📝 Session Notes</div>
+            <textarea class="inp" id="focusNotes" placeholder="Jot down thoughts during this session..." style="min-height:90px;resize:vertical"></textarea>
+            <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" onclick="saveFocusNotes()">Save Notes</button>
+          </div>
+          <!-- Timer presets in sidebar -->
+          <div class="card">
+            <div class="card-title">⚡ Quick Timers</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+              <button class="btn btn-ghost btn-sm" onclick="quickTimer(5)">5 min ☕</button>
+              <button class="btn btn-ghost btn-sm" onclick="quickTimer(10)">10 min 🧘</button>
+              <button class="btn btn-ghost btn-sm" onclick="quickTimer(20)">20 min 📖</button>
+              <button class="btn btn-ghost btn-sm" onclick="quickTimer(25)">25 min 🍅</button>
+              <button class="btn btn-ghost btn-sm" onclick="quickTimer(45)">45 min 🎯</button>
+              <button class="btn btn-ghost btn-sm" onclick="quickTimer(60)">60 min 💪</button>
+              <button class="btn btn-ghost btn-sm" onclick="quickTimer(90)">90 min 🧠</button>
+              <button class="btn btn-ultimate btn-sm" onclick="setMode('ultimate')">Custom 🔥</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ MUSIC ═══ -->
+    <div class="section" id="s-music">
+      <div class="grid2">
+        <div>
+          <div class="card">
+            <div class="card-title">🎵 Music Player</div>
+            <div class="music-player-wrap">
+              <button class="music-upload-btn" onclick="document.getElementById('musicFileInput').click()">
+                📁 Add music from your device
+              </button>
+              <input type="file" id="musicFileInput" accept="audio/*" multiple style="display:none" onchange="loadMusicFiles(this.files)"/>
+
+              <!-- Now playing -->
+              <div class="now-playing">
+                <div class="track-art" id="trackArtEl">🎵</div>
+                <div style="flex:1;min-width:0">
+                  <div class="track-name" id="trackNameEl">No track loaded</div>
+                  <div class="track-artist" id="trackArtistEl">Add music to begin</div>
+                </div>
+                <div class="eq-bars" id="eqBars" style="display:none">
+                  <div class="eq-bar" style="height:6px"></div>
+                  <div class="eq-bar" style="height:10px"></div>
+                  <div class="eq-bar" style="height:8px"></div>
+                  <div class="eq-bar" style="height:13px"></div>
+                </div>
+              </div>
+
+              <!-- Visualizer bars -->
+              <div class="vis-bars" id="visBars" style="margin-bottom:10px"></div>
+
+              <!-- Controls -->
+              <div class="mc-row">
+                <button class="mc-btn" onclick="prevTrack()" title="Previous">⏮</button>
+                <button class="mc-btn mc-play" id="playPauseBtn" onclick="togglePlay()">▶</button>
+                <button class="mc-btn" onclick="nextTrack()" title="Next">⏭</button>
+                <div class="prog-wrap" onclick="seekAudio(event)" style="flex:1">
+                  <div class="prog-bar-m"><div class="prog-fill-m" id="audioProgress"></div></div>
+                  <div class="time-row-m"><span id="audioCur">0:00</span><span id="audioDur">0:00</span></div>
+                </div>
+              </div>
+              <div class="vol-row">
+                <span style="font-size:14px">🔈</span>
+                <input type="range" class="vol-s" id="volSlider" min="0" max="100" value="80" oninput="setVol(this.value)"/>
+                <span style="font-size:11px;color:var(--tx3);min-width:30px" id="volPct">80%</span>
+                <button class="shuffle-btn" id="shuffleBtn" onclick="toggleShuffle()">⇄ Shuffle</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div class="card-title" style="margin-bottom:0">📋 Playlist</div>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('musicFileInput').click()">+ Add</button>
+                <button class="btn btn-danger btn-sm" onclick="clearPlaylist()">Clear</button>
+              </div>
+            </div>
+            <div class="playlist-wrap" id="playlist">
+              <div style="text-align:center;padding:24px;font-size:12px;color:var(--tx3)">
+                No tracks yet — add music from your device above 🎵
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">🎧 Study Moods</div>
+            <p style="font-size:12px;color:var(--tx2);margin-bottom:10px">Filter your playlist by vibe:</p>
+            <div style="display:flex;gap:6px;flex-wrap:wrap" id="moodBtns">
+              <button class="genre-btn active" onclick="selectMood('all',this)">All</button>
+              <button class="genre-btn" onclick="selectMood('focus',this)">🎯 Focus</button>
+              <button class="genre-btn" onclick="selectMood('chill',this)">🌿 Chill</button>
+              <button class="genre-btn" onclick="selectMood('energy',this)">⚡ Energy</button>
+              <button class="genre-btn" onclick="selectMood('ambient',this)">🌌 Ambient</button>
+            </div>
+            <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--br)">
+              <div class="card-title">⏰ Sleep Timer</div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <select class="inp" id="sleepTimerSel" style="flex:1">
+                  <option value="0">Off</option>
+                  <option value="15">15 minutes</option>
+                  <option value="30">30 minutes</option>
+                  <option value="45">45 minutes</option>
+                  <option value="60">1 hour</option>
+                </select>
+                <button class="btn btn-ghost btn-sm" onclick="setSleepTimer()">Set</button>
+              </div>
+              <div style="font-size:11px;color:var(--tx3);margin-top:6px" id="sleepTimerStatus">Music will stop when timer ends</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ AI STUDIO ═══ -->
+    <div class="section" id="s-ai">
+      <div style="max-width:720px;margin:0 auto">
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px">
+          <button class="ai-quick-btn" onclick="aiTool('quiz')">🧩<br><span>Quiz me</span></button>
+          <button class="ai-quick-btn" onclick="aiTool('flashcard')">🗂️<br><span>Flashcards</span></button>
+          <button class="ai-quick-btn" onclick="aiTool('explain')">💡<br><span>Explain</span></button>
+          <button class="ai-quick-btn" onclick="aiTool('plan')">📋<br><span>Study Plan</span></button>
+          <button class="ai-quick-btn" onclick="aiTool('pomodoro')">⏱️<br><span>Focus Tips</span></button>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <div style="padding:14px 18px;border-bottom:1px solid var(--br);display:flex;align-items:center;gap:10px">
+            <div style="font-size:20px">🧠</div>
+            <div><div style="font-size:14px;font-weight:700">AI Study Assistant</div><div style="font-size:11px;color:var(--tx3)">Ask anything about your studies</div></div>
+            <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="clearAiChat()">Clear</button>
+          </div>
+          <div id="aiMessages" style="height:400px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px">
+            <div class="ai-msg bot">👋 Hi! Ask me anything — explain topics, make quizzes, build flashcards, or plan your schedule.</div>
+          </div>
+          <div style="padding:12px 16px;border-top:1px solid var(--br);display:flex;gap:8px">
+            <input class="ai-inp" id="aiInput" placeholder="Ask anything… e.g. 'Explain Newton's laws'" onkeydown="if(event.key==='Enter')sendAiMsg()"/>
+            <button class="btn btn-primary btn-sm" onclick="sendAiMsg()">Send</button>
+          </div>
+        </div>
+        <div style="margin-top:10px;display:flex;align-items:center;gap:10px">
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('pdfInput').click()">📄 Upload study material</button>
+          <input type="file" id="pdfInput" accept=".pdf,.txt" style="display:none" onchange="loadStudyFile(this)"/>
+          <div id="fileInfo" style="font-size:11px;color:var(--tx3)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ CALENDAR + TO-DO ═══ -->
+    <div class="section" id="s-calendar">
+      <div class="grid2">
+        <div>
+          <div class="card">
+            <div class="cal-header">
+              <button class="cal-nav" onclick="calNav(-1)">‹</button>
+              <div class="cal-title" id="calTitle"></div>
+              <button class="cal-nav" onclick="calNav(1)">›</button>
+            </div>
+            <div class="cal-grid">
+              <div class="cal-dow">Su</div><div class="cal-dow">Mo</div><div class="cal-dow">Tu</div>
+              <div class="cal-dow">We</div><div class="cal-dow">Th</div><div class="cal-dow">Fr</div><div class="cal-dow">Sa</div>
+            </div>
+            <div class="cal-grid" id="calGrid" style="margin-top:3px"></div>
+          </div>
+          <!-- Day detail -->
+          <div class="card" id="calDayCard" style="display:none">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div class="card-title" style="margin-bottom:0" id="calDayTitle">Tasks for today</div>
+              <button class="btn btn-ghost btn-sm" onclick="document.getElementById('calDayCard').style.display='none'">✕</button>
+            </div>
+            <div id="calDayItems"></div>
+          </div>
+        </div>
+        <div>
+          <!-- Add to calendar -->
+          <div class="card">
+            <div class="card-title">➕ Add Task / Event</div>
+            <div class="form-group"><label class="lbl">Date</label><input type="date" class="inp" id="calDate"/></div>
+            <div class="form-group"><label class="lbl">Title *</label><input type="text" class="inp" id="calTitle2" placeholder="What needs to be done?"/></div>
+            <div class="form-group"><label class="lbl">Type</label>
+              <select class="inp" id="calType">
+                <option value="task">📌 Task (adds to Tasks list)</option>
+                <option value="event">📅 Event / Reminder</option>
+                <option value="exam">🎓 Exam / Test</option>
+                <option value="deadline">⚠️ Deadline</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="lbl">Subject</label>
+              <select class="inp" id="calSubject">
+                <option>Mathematics</option><option>Computer Science</option><option>Physics</option>
+                <option>Literature</option><option>History</option><option>Chemistry</option><option>Other</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="lbl">Priority</label>
+              <select class="inp" id="calPriority">
+                <option value="low">Low</option><option value="medium" selected>Medium</option>
+                <option value="high">High</option><option value="urgent">Urgent</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="addCalItem()">+ Add to Calendar</button>
+          </div>
+
+          <!-- To-Do List -->
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div class="card-title" style="margin-bottom:0">📋 All To-Do Items</div>
+              <div style="display:flex;gap:5px">
+                <button class="btn btn-ghost btn-sm" onclick="calTodoFilter('all')" id="ctfAll" style="color:var(--teal);border-color:var(--teal)">All</button>
+                <button class="btn btn-ghost btn-sm" onclick="calTodoFilter('pending')" id="ctfPending">Pending</button>
+                <button class="btn btn-ghost btn-sm" onclick="calTodoFilter('done')" id="ctfDone">Done</button>
+              </div>
+            </div>
+            <div class="cal-todo-list" id="calTodoList"></div>
+          </div>
+
+          <!-- Upcoming -->
+          <div class="card">
+            <div class="card-title">📆 Upcoming</div>
+            <div id="calUpcoming"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ANALYTICS ═══ -->
+    <div class="section" id="s-analytics">
+      <div class="grid2">
+        <div>
+          <div class="card">
+            <div class="card-title">📊 Weekly Study Minutes</div>
+            <div class="bar-chart" id="analyticsChart" style="height:180px"></div>
+            <div style="display:flex;gap:7px;margin-top:5px" id="analyticsLabels"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">📚 Subject Distribution</div>
+            <div id="analyticsSubjects"></div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title">🎯 All-Time Stats</div>
+            <div class="grid2" style="gap:9px">
+              <div class="dw-stat"><div class="dw-val" id="an-s">0</div><div class="dw-lbl">Sessions</div></div>
+              <div class="dw-stat"><div class="dw-val" id="an-m">0</div><div class="dw-lbl">Minutes</div></div>
+              <div class="dw-stat"><div class="dw-val" id="an-t">0</div><div class="dw-lbl">Tasks Done</div></div>
+              <div class="dw-stat"><div class="dw-val" id="an-x">0</div><div class="dw-lbl">Total XP</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">🏅 Badges</div>
+            <div class="badge-grid" id="analyticsBadges"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">📈 30-Day History</div>
+            <div style="display:flex;flex-wrap:wrap;gap:3px" id="streakHistory"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ GROUPS ═══ -->
+    <div class="section" id="s-groups">
+      <div style="display:grid;grid-template-columns:260px 1fr;gap:14px;height:calc(100vh - 120px)">
+
+        <!-- LEFT: group list -->
+        <div style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;padding-right:4px">
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" onclick="openModal('createGroupModal')">+ Create</button>
+            <button class="btn btn-ghost btn-sm" onclick="openModal('joinGroupModal')">🔗 Join</button>
+            <button class="btn btn-ghost btn-sm" onclick="openModal('addCompetitorModal')">⚔️ Rival</button>
+          </div>
+
+          <div style="font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:1.6px;font-weight:600">Groups</div>
+          <div id="groupListSide"></div>
+
+          <div style="font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:1.6px;font-weight:600;margin-top:4px">Competitors</div>
+          <div id="competitorListSide"></div>
+          <button class="btn btn-ghost btn-sm" onclick="openModal('addCompetitorModal')">+ Add by UID</button>
+
+          <div style="font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:1.6px;font-weight:600;margin-top:4px">Find User</div>
+          <div style="display:flex;gap:6px">
+            <input type="text" class="inp" id="searchUID" placeholder="SF-XXXXXX" style="text-transform:uppercase;font-size:12px;padding:8px 10px"/>
+            <button class="btn btn-ghost btn-sm" onclick="searchByUID()" style="flex-shrink:0">Go</button>
+          </div>
+          <div id="searchResult"></div>
+        </div>
+
+        <!-- RIGHT: group chat -->
+        <div style="display:flex;flex-direction:column;background:var(--s1);border:1px solid var(--br);border-radius:var(--r);overflow:hidden;position:relative">
+          <!-- Chat header -->
+          <div id="chatHeader" style="padding:14px 18px;border-bottom:1px solid var(--br);display:flex;align-items:center;gap:12px;background:rgba(7,17,30,.9);backdrop-filter:blur(10px);flex-shrink:0">
+            <div id="chatGroupEmoji" style="font-size:24px">💬</div>
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:700" id="chatGroupName">Select a group to chat</div>
+              <div style="font-size:11px;color:var(--tx3)" id="chatGroupMeta">Pick a group from the left panel</div>
+            </div>
+            <div id="chatOnline" style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--green)"></div>
+          </div>
+
+          <!-- No group selected -->
+          <div id="noChatSel" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--tx3)">
+            <div style="font-size:48px">💬</div>
+            <div style="font-size:14px;font-weight:600">No group selected</div>
+            <div style="font-size:12px">Create or join a group, then click it to open the chat</div>
+            <button class="btn btn-primary btn-sm" onclick="openModal('createGroupModal')">+ Create Group</button>
+          </div>
+
+          <!-- Messages area -->
+          <div id="chatMessages" style="flex:1;overflow-y:auto;padding:16px;display:none;flex-direction:column;gap:10px"></div>
+
+          <!-- Typing indicator -->
+          <div id="typingIndicator" style="padding:0 16px 4px;font-size:11px;color:var(--tx3);display:none;flex-shrink:0"></div>
+
+          <!-- Input area -->
+          <div id="chatInputArea" style="display:none;padding:12px 16px;border-top:1px solid var(--br);background:rgba(7,17,30,.8);flex-shrink:0">
+            <!-- Reactions bar -->
+            <div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap">
+              <span style="font-size:11px;color:var(--tx3);align-self:center">Quick:</span>
+              <button class="qr-btn" onclick="sendQuick('👍 Understood!')">👍 Got it</button>
+              <button class="qr-btn" onclick="sendQuick('🔥 Let\'s study!')">🔥 Let\'s go</button>
+              <button class="qr-btn" onclick="sendQuick('❓ I have a question')">❓ Question</button>
+              <button class="qr-btn" onclick="sendQuick('✅ Done for today!')">✅ Done</button>
+              <button class="qr-btn" onclick="sendQuick('☕ Taking a break')">☕ Break</button>
+            </div>
+            <div style="display:flex;gap:8px;align-items:flex-end">
+              <textarea id="chatInput" placeholder="Type a message… (Enter to send, Shift+Enter for new line)" style="flex:1;background:var(--s2);border:1px solid var(--br2);border-radius:10px;padding:10px 13px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:none;max-height:100px;min-height:40px;line-height:1.4;transition:border-color .2s" onkeydown="chatKeydown(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
+              <div style="display:flex;flex-direction:column;gap:5px">
+                <button class="btn btn-primary btn-sm" onclick="sendChatMsg()" style="padding:10px 14px">Send ↵</button>
+                <button class="btn btn-ghost btn-sm" onclick="sendChatImg()" style="font-size:11px">📎</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PROFILE ═══ -->
+    <div class="section" id="s-profile">
+      <div class="grid2">
+        <div>
+          <div class="card">
+            <div style="text-align:center;padding:16px 0 12px">
+              <div class="profile-avatar-big" id="profileAvatar">📚</div>
+              <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-bottom:2px" id="profileName">Loading…</div>
+              <div style="font-size:11px;color:var(--tx3);margin-bottom:12px" id="profileLvlLabel">Level 1</div>
+              <div style="font-size:10px;color:var(--tx3);margin-bottom:6px">Your Study ID — share to compete</div>
+              <div class="uid-box" onclick="copyUID()">
+                <div class="uid-text" id="profileUID">SF-XXXXXX</div>
+                <div style="font-size:10px;color:var(--tx3)" id="copyHint">📋 Copy</div>
+              </div>
+            </div>
+            <div style="margin-top:14px">
+              <div class="form-group"><label class="lbl">Display Name</label><input type="text" class="inp" id="editName"/></div>
+              <div class="form-group"><label class="lbl">Pick Avatar</label>
+                <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px" id="avatarPicker"></div>
+              </div>
+              <button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="saveProfile()">Save Profile</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title">⚡ XP &amp; Progress</div>
+            <div class="xp-ring-wrap" style="margin-bottom:12px">
+              <svg width="88" height="88" viewBox="0 0 88 88" style="flex-shrink:0">
+                <circle cx="44" cy="44" r="37" fill="none" stroke="var(--s2)" stroke-width="6"/>
+                <circle id="xpArcP" cx="44" cy="44" r="37" fill="none" stroke="url(#xpGP)" stroke-width="6" stroke-linecap="round" stroke-dasharray="233" stroke-dashoffset="233" transform="rotate(-90 44 44)" style="transition:stroke-dashoffset 1.2s ease"/>
+                <defs><linearGradient id="xpGP" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0ecfc9"/><stop offset="100%" stop-color="#9b7af4"/></linearGradient></defs>
+                <text x="44" y="41" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" fill="#0ecfc9" id="xpPctP">0%</text>
+                <text x="44" y="53" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="7" fill="#3a5470" letter-spacing="1">LV <tspan id="xpLvlP">1</tspan></text>
+              </svg>
+              <div style="flex:1">
+                <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;margin-bottom:6px" id="profileLvlTitle">Novice Scholar</div>
+                <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">
+                  <div style="padding:2px 8px;border-radius:5px;background:rgba(14,207,201,.1);border:1px solid rgba(14,207,201,.2);color:var(--teal);font-size:10px;font-weight:600">⚡ <span id="profileXP">0</span> XP</div>
+                  <div style="padding:2px 8px;border-radius:5px;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.2);color:var(--amber);font-size:10px;font-weight:600">🔥 <span id="profileStreak">0</span>d</div>
+                  <div style="padding:2px 8px;border-radius:5px;background:rgba(31,207,142,.1);border:1px solid rgba(31,207,142,.2);color:var(--green);font-size:10px;font-weight:600">✅ <span id="profileTasks">0</span></div>
+                </div>
+                <div style="font-size:10px;color:var(--tx3)" id="profileXPNext">0 XP to next level</div>
+                <div class="prog-track"><div class="prog-fill" id="xpBarP" style="width:0%"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">🏅 Badges</div>
+            <div class="badge-grid" id="profileBadges"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">📊 Stats</div>
+            <div class="grid2" style="gap:8px">
+              <div class="dw-stat"><div class="dw-val" id="ps-s">0</div><div class="dw-lbl">Sessions</div></div>
+              <div class="dw-stat"><div class="dw-val" id="ps-m">0</div><div class="dw-lbl">Minutes</div></div>
+              <div class="dw-stat"><div class="dw-val" id="ps-b">0</div><div class="dw-lbl">Best Streak</div></div>
+              <div class="dw-stat"><div class="dw-val" id="ps-g">0</div><div class="dw-lbl">Groups</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SETTINGS ═══ -->
+    <div class="section" id="s-settings">
+      <div class="grid2">
+        <div>
+          <div class="card">
+            <div class="card-title">⏱️ Timer Durations</div>
+            <div class="form-group"><label class="lbl">Pomodoro (min)</label><input type="number" class="inp" id="set-pom" value="25" min="1" max="90" onchange="saveSettings()"/></div>
+            <div class="form-group"><label class="lbl">Short Break (min)</label><input type="number" class="inp" id="set-short" value="5" min="1" max="30" onchange="saveSettings()"/></div>
+            <div class="form-group"><label class="lbl">Long Break (min)</label><input type="number" class="inp" id="set-long" value="15" min="5" max="60" onchange="saveSettings()"/></div>
+            <div class="form-group"><label class="lbl">Deep Work (min)</label><input type="number" class="inp" id="set-deep" value="90" min="10" max="360" onchange="saveSettings()"/></div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title">👤 Profile</div>
+            <div class="form-group"><label class="lbl">Name</label><input type="text" class="inp" id="set-name" onchange="saveSettings()"/></div>
+            <div class="form-group"><label class="lbl">Daily Goal (min)</label><input type="number" class="inp" id="set-goal" value="90" onchange="saveSettings()"/></div>
+          </div>
+          <div class="card">
+            <div class="card-title">🗑️ Data</div>
+            <div style="font-size:12px;color:var(--tx2);margin-bottom:10px">All data stored in your browser locally.</div>
+            <button class="btn btn-danger btn-sm" onclick="clearData()">Reset All Data</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MODALS -->
+<div class="modal-bg" id="addTaskModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('addTaskModal')">✕</button>
+    <div class="modal-title">✅ Add New Task</div>
+    <div class="form-group"><label class="lbl">Title *</label><input type="text" class="inp" id="taskTitle" placeholder="What do you need to study?"/></div>
+    <div class="form-group"><label class="lbl">Subject</label>
+      <select class="inp" id="taskSubject">
+        <option>Mathematics</option><option>Computer Science</option><option>Physics</option>
+        <option>Literature</option><option>History</option><option>Chemistry</option><option>Other</option>
+      </select>
+    </div>
+    <div class="grid2" style="gap:10px">
+      <div class="form-group"><label class="lbl">Priority</label>
+        <select class="inp" id="taskPriority">
+          <option value="low">Low</option><option value="medium" selected>Medium</option>
+          <option value="high">High</option><option value="urgent">Urgent</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="lbl">Est. Minutes</label><input type="number" class="inp" id="taskMins" placeholder="30" min="1"/></div>
+    </div>
+    <div class="form-group"><label class="lbl">Due Date</label><input type="date" class="inp" id="taskDue"/></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('addTaskModal')">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="addTask()">Add Task</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="createGroupModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('createGroupModal')">✕</button>
+    <div class="modal-title">👥 Create Study Group</div>
+    <div class="form-group"><label class="lbl">Group Name *</label><input type="text" class="inp" id="grpName" placeholder="e.g. Maths Squad"/></div>
+    <div class="form-group"><label class="lbl">Description</label><input type="text" class="inp" id="grpDesc" placeholder="What will you study together?"/></div>
+    <div class="form-group"><label class="lbl">Emoji</label><div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px" id="grpEmojiPicker"></div></div>
+    <div class="form-group"><label class="lbl">Subject</label>
+      <select class="inp" id="grpSubject"><option>General</option><option>Mathematics</option><option>Computer Science</option><option>Physics</option><option>Mixed</option></select>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('createGroupModal')">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="createGroup()">Create Group</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="joinGroupModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('joinGroupModal')">✕</button>
+    <div class="modal-title">🔗 Join a Group</div>
+    <div class="form-group"><label class="lbl">Invite Code</label><input type="text" class="inp" id="joinCode" placeholder="e.g. AB12CD34" style="text-transform:uppercase;letter-spacing:2px"/></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('joinGroupModal')">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="joinGroup()">Join</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="addCompetitorModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('addCompetitorModal')">✕</button>
+    <div class="modal-title">⚔️ Add Competitor</div>
+    <div class="form-group"><label class="lbl">Friend's Study ID</label><input type="text" class="inp" id="compUID" placeholder="SF-XXXXXX" style="text-transform:uppercase"/></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('addCompetitorModal')">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="addCompetitor()">Challenge!</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastMsg">Done!</span></div>
+
+<script>
+// ════════════════ CONSTANTS ════════════════
+const XP_LEVELS=[
+  {l:1,xp:0,t:'Novice Scholar'},{l:2,xp:100,t:'Curious Mind'},{l:3,xp:250,t:'Dedicated Student'},
+  {l:4,xp:500,t:'Knowledge Seeker'},{l:5,xp:900,t:'Focus Warrior'},{l:6,xp:1400,t:'Deep Thinker'},
+  {l:7,xp:2000,t:'Study Veteran'},{l:8,xp:2750,t:'Wisdom Apprentice'},{l:9,xp:3750,t:'Learning Master'},
+  {l:10,xp:5000,t:'Scholar Elite'},{l:11,xp:6500,t:'Intellectual'},{l:12,xp:8500,t:'Grand Scholar'},
+  {l:13,xp:11000,t:'Sage'},{l:14,xp:14000,t:'Luminary'},{l:15,xp:18000,t:'StudyFlow Legend'}
+];
+const PRI={urgent:{c:'#f4546a',bg:'rgba(244,84,106,.14)'},high:{c:'#f5a623',bg:'rgba(245,166,35,.14)'},medium:{c:'#0ecfc9',bg:'rgba(14,207,201,.14)'},low:{c:'#3a5470',bg:'rgba(58,84,112,.2)'}};
+const BADGES=[
+  {id:'first_session',name:'First Session',emoji:'🎯'},{id:'streak_3',name:'3-Day Streak',emoji:'🔥'},
+  {id:'streak_7',name:'Week Warrior',emoji:'⚡'},{id:'streak_30',name:'Monthly',emoji:'🏆'},
+  {id:'century',name:'Century',emoji:'💯'},{id:'task_master',name:'Task Master',emoji:'✅'},
+  {id:'night_owl',name:'Night Owl',emoji:'🦉'},{id:'early_bird',name:'Early Bird',emoji:'🌅'},
+  {id:'ai_explorer',name:'AI Explorer',emoji:'🧠'},{id:'social',name:'Collaborator',emoji:'👥'},
+];
+const EMOJIS=['📚','🎓','🔬','🧮','📐','✏️','📖','💡','🎯','⚡','🌟','🚀','💎','🦁','🐉'];
+const SUBJECTS=[
+  {name:'Mathematics',color:'#0ecfc9'},{name:'Computer Science',color:'#9b7af4'},
+  {name:'Physics',color:'#c9a84c'},{name:'Literature',color:'#1fcf8e'},
+  {name:'History',color:'#60a5fa'},{name:'Other',color:'#7a9ab8'},
+];
+
+// ════════════════ STATE ════════════════
+function genUID(){
+  const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let id='SF-';
+  for(let i=0;i<6;i++) id+=chars[Math.floor(Math.random()*chars.length)];
+  return id;
+}
+function mkUser(){
+  return{
+    name:'New Student',avatar:'📚',
+    uid: genUID(),  // Always fresh unique UID
+    xp:0,streak:0,bestStreak:0,lastStudy:null,
+    totalSessions:0,totalMins:0,earnedBadges:[]
+  };
+}
+function load(){try{return JSON.parse(localStorage.getItem('sf3')||'{}')}catch{return{}}}
+function getS(){
+  const d=load();
+  // If no UID exists, always generate a new one (ensures uniqueness)
+  if(d.user && !d.user.uid) d.user.uid = genUID();
+  return{
+    user: d.user||mkUser(),
+    tasks: d.tasks||[],
+    groups: d.groups||[],
+    competitors: d.competitors||[],
+    sessions: d.sessions||[],
+    settings: d.settings||{pom:25,short:5,long:15,deep:90,goal:90},
+    weekData: d.weekData||Array(7).fill(0),
+    calItems: d.calItems||[],
+    groupMessages: d.groupMessages||{},
+  };
+}
+let S=getS();
+function save(){localStorage.setItem('sf3',JSON.stringify(S))}
+
+// ════════════════ NAVIGATION ════════════════
+const PAGE_TITLES={
+  dashboard:'Dashboard',tasks:'Tasks',focus:'Focus Mode',music:'Music',
+  ai:'AI Studio',calendar:'Calendar & To-Do',analytics:'Analytics',
+  groups:'Study Groups',profile:'Profile',settings:'Settings'
+};
+function nav(page){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const sec=document.getElementById('s-'+page);
+  if(sec) sec.classList.add('active');
+  const ni=document.querySelector(`.nav-item[data-page="${page}"]`);
+  if(ni) ni.classList.add('active');
+  document.getElementById('pageTitle').textContent=PAGE_TITLES[page]||page;
+  if(page==='dashboard') renderDash();
+  if(page==='tasks') renderTasks();
+  if(page==='analytics') renderAnalytics();
+  if(page==='calendar') renderCalendar();
+  if(page==='groups') renderGroups();
+  if(page==='profile') renderProfile();
+  if(page==='focus') {renderFocusTaskSelect();updateFocusMusicMini();}
+  if(page==='music') renderPlaylist();
+}
+
+// ════════════════ XP / LEVEL ════════════════
+function getLevel(xp){let l=XP_LEVELS[0];for(const v of XP_LEVELS){if(xp>=v.xp)l=v;else break;}return l;}
+function getLvlProg(xp){
+  const cur=getLevel(xp);const idx=XP_LEVELS.findIndex(l=>l.l===cur.l);
+  const next=XP_LEVELS[idx+1];if(!next)return{pct:100,toNext:0};
+  const range=next.xp-cur.xp;const earned=xp-cur.xp;
+  return{pct:Math.round((earned/range)*100),toNext:next.xp-xp};
+}
+
+// ════════════════ DASHBOARD ════════════════
+function renderDash(){
+  const u=S.user;const done=S.tasks.filter(t=>t.status==='done').length;
+  const lvl=getLevel(u.xp);const prog=getLvlProg(u.xp);
+  setText('d-mins',u.totalMins);setText('d-tasks',done);setText('d-streak',u.streak);
+  setText('d-best',u.bestStreak);setText('d-xp',u.xp);setText('d-lvl',lvl.l);
+  setText('dashStreakBig',u.streak);
+  // XP ring
+  const c=251,off=c-(prog.pct/100)*c;
+  setAttr('xpArcD','stroke-dashoffset',off);
+  setText('xpPctD',prog.pct+'%');setText('xpLvlD',lvl.l);
+  setText('xpTitleD',lvl.t);setText('xpTotalD',u.xp);setText('streakD',u.streak);
+  setText('xpNextD',prog.toNext+' XP to next');
+  el('xpBarD').style.width=prog.pct+'%';
+  // Streak dots
+  const days=['M','T','W','T','F','S','S'];
+  el('dashStreakDots').innerHTML=days.map((d,i)=>`<div class="streak-dot" style="background:${i<Math.min(u.streak,7)?'rgba(245,166,35,.35)':'var(--s2)'};color:${i<Math.min(u.streak,7)?'var(--amber)':'var(--tx3)'}">${d}</div>`).join('');
+  // Chart
+  renderBarChart('dashChart','dashChartLabels',S.weekData);
+  // Task preview
+  const pending=S.tasks.filter(t=>t.status!=='done').slice(0,4);
+  el('dashTaskPreview').innerHTML=pending.length?pending.map(t=>miniTaskHTML(t)).join(''):`<div style="font-size:12px;color:var(--tx3);text-align:center;padding:14px">No pending tasks! <span style="color:var(--teal);cursor:pointer" onclick="openModal('addTaskModal')">Add one →</span></div>`;
+  // Subjects
+  const cnt={};S.tasks.filter(t=>t.status==='done').forEach(t=>{cnt[t.subject]=(cnt[t.subject]||0)+1});
+  const tot=Object.values(cnt).reduce((a,b)=>a+b,0)||1;
+  el('dashSubjects').innerHTML=SUBJECTS.map(s=>{const c=cnt[s.name]||0;const p=Math.round((c/tot)*100);return `<div class="subj-bar"><div class="subj-bar-label">${s.name.split(' ')[0]}</div><div class="subj-bar-track"><div class="subj-bar-fill" style="width:${p}%;background:${s.color}"></div></div><div class="subj-bar-pct">${p}%</div></div>`;}).join('');
+  // Sidebar
+  el('sidebarAvatar').textContent=u.avatar;el('sidebarName').textContent=u.name;
+  el('sidebarLevel').textContent=`Lv ${lvl.l} · ${lvl.t}`;
+  el('topbarAvatar').textContent=u.avatar;
+}
+function renderBarChart(chartId,labelId,data){
+  const max=Math.max(...data,10);
+  const colors=['#0ecfc9','#0ecfc9','#0ecfc9','#0ecfc9','#0ecfc9','#9b7af4','#9b7af4'];
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  el(chartId).innerHTML=data.map((m,i)=>`<div class="bar-col"><div class="bar-val">${m}</div><div class="bar-outer"><div class="bar-inner" data-h="${Math.round((m/max)*100)}" style="height:0%;background:${colors[i]}"></div></div></div>`).join('');
+  el(labelId).innerHTML=days.map(d=>`<div style="flex:1;text-align:center;font-size:9px;color:var(--tx3);text-transform:uppercase">${d}</div>`).join('');
+  setTimeout(()=>document.querySelectorAll(`#${chartId} .bar-inner`).forEach(b=>b.style.height=b.dataset.h+'%'),80);
+}
+function miniTaskHTML(t){
+  const p=PRI[t.priority]||PRI.medium;
+  return `<div class="task-item" style="margin-bottom:6px">
+    <div class="task-cb${t.status==='done'?' done':''}" onclick="toggleTask('${t.id}')">${t.status==='done'?'✓':''}</div>
+    <div style="flex:1;min-width:0"><div class="task-text${t.status==='done'?' done-text':''}">${t.title}</div><div class="task-subject">${t.subject}</div></div>
+    <div class="pri-badge" style="color:${p.c};background:${p.bg}">${t.priority}</div>
+  </div>`;
+}
+
+// ════════════════ TASKS ════════════════
+let taskFilter='all';
+function filterTasks(f){
+  taskFilter=f;
+  ['all','todo','in_progress','done'].forEach(x=>{
+    const map={all:'fAll',todo:'fTodo',in_progress:'fProg',done:'fDone'};
+    const b=el(map[x]);if(!b)return;
+    b.style.borderColor=x===f?'var(--teal)':'';b.style.color=x===f?'var(--teal)':'';
+  });
+  renderTasks();
+}
+function renderTasks(){
+  const filtered=taskFilter==='all'?S.tasks:S.tasks.filter(t=>t.status===taskFilter);
+  el('taskCount').textContent=`${filtered.length} task${filtered.length!==1?'s':''}`;
+  el('taskListFull').innerHTML=filtered.length?filtered.map(t=>fullTaskHTML(t)).join(''):`<div style="text-align:center;padding:32px;color:var(--tx3)">No tasks here. <span style="color:var(--teal);cursor:pointer" onclick="openModal('addTaskModal')">Add one!</span></div>`;
+}
+function fullTaskHTML(t){
+  const p=PRI[t.priority]||PRI.medium;const xpr={low:10,medium:15,high:25,urgent:40};
+  return `<div class="task-item">
+    <div class="task-cb${t.status==='done'?' done':''}" onclick="toggleTask('${t.id}')">${t.status==='done'?'✓':''}</div>
+    <div style="flex:1;min-width:0">
+      <div class="task-text${t.status==='done'?' done-text':''}">${t.title}</div>
+      <div class="task-subject">${t.subject}${t.dueDate?' · Due '+t.dueDate:''}${t.estimatedMins?' · ~'+t.estimatedMins+'m':''}</div>
+    </div>
+    <div class="pri-badge" style="color:${p.c};background:${p.bg}">${t.priority}</div>
+    <div class="xp-chip">⚡${xpr[t.priority]||10}</div>
+    <button class="del-btn" onclick="deleteTask('${t.id}')">✕</button>
+  </div>`;
+}
+function addTask(){
+  const title=el('taskTitle').value.trim();
+  if(!title){showToast('Enter a task title','#f4546a');return;}
+  const task={id:Date.now().toString(36),title,subject:el('taskSubject').value,
+    priority:el('taskPriority').value,estimatedMins:parseInt(el('taskMins').value)||null,
+    dueDate:el('taskDue').value||null,status:'todo',createdAt:new Date().toISOString()};
+  S.tasks.unshift(task);save();closeModal('addTaskModal');
+  el('taskTitle').value='';el('taskMins').value='';el('taskDue').value='';
+  renderTasks();renderFocusTaskSelect();showToast('Task added ✅');
+  checkBadge('task_master');
+}
+function toggleTask(id){
+  const t=S.tasks.find(x=>x.id===id);if(!t)return;
+  const xpr={low:10,medium:15,high:25,urgent:40};const xp=xpr[t.priority]||10;
+  if(t.status==='done'){t.status='todo';S.user.xp=Math.max(0,S.user.xp-xp);}
+  else{t.status='done';t.completedAt=new Date().toISOString();S.user.xp+=xp;showToast(`+${xp} XP! 🎉`);checkBadge('task_master');}
+  save();renderTasks();renderDash();
+}
+function deleteTask(id){S.tasks=S.tasks.filter(t=>t.id!==id);save();renderTasks();renderFocusTaskSelect();}
+
+// ════════════════ FOCUS / POMODORO ════════════════
+let pomMode='pomodoro',pomRunning=false,pomSecs=25*60,pomMaxSecs=25*60;
+let pomInterval=null,pomSessionCount=0,pomTodayMins=0,pomInterruptions=0;
+const MODES={
+  pomodoro:{label:'🍅 Work Session',getMin:()=>parseInt(el('set-pom')?.value||25)},
+  deep:{label:'🧠 Deep Work',getMin:()=>parseInt(el('set-deep')?.value||90)},
+  short:{label:'☕ Short Break',getMin:()=>parseInt(el('set-short')?.value||5)},
+  long:{label:'🛋️ Long Break',getMin:()=>parseInt(el('set-long')?.value||15)},
+  ultimate:{label:'🔥 Ultimate Focus',getMin:()=>0},// duration set manually
+};
+function setMode(m){
+  if(pomRunning){showToast('Stop the timer first','#f5a623');return;}
+  pomMode=m;
+  document.querySelectorAll('.mode-tab').forEach((t,i)=>t.classList.toggle('active',['pomodoro','deep','short','long','ultimate'][i]===m));
+  el('ultimatePanel').style.display=m==='ultimate'?'block':'none';
+  if(m==='ultimate'){applyUltimate();}
+  else{pomSecs=MODES[m].getMin()*60;pomMaxSecs=pomSecs;}
+  // Ring color
+  const isUlt=m==='ultimate';
+  el('pomGradStart').setAttribute('stop-color',isUlt?'#f5a623':'#0ecfc9');
+  el('pomGradEnd').setAttribute('stop-color',isUlt?'#f4546a':'#9b7af4');
+  updatePomDisplay();
+}
+function applyUltimate(){
+  const h=parseInt(el('ult-h').value)||0;const m=parseInt(el('ult-m').value)||0;const s=parseInt(el('ult-s').value)||0;
+  pomSecs=h*3600+m*60+s;pomMaxSecs=pomSecs;
+  updatePomDisplay();
+}
+function setUltPreset(h,m,s){
+  el('ult-h').value=h;el('ult-m').value=m;el('ult-s').value=s;
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  applyUltimate();
+}
+function quickTimer(mins){
+  if(pomRunning){showToast('Stop current timer first','#f5a623');return;}
+  setMode('ultimate');
+  el('ult-h').value=0;el('ult-m').value=mins;el('ult-s').value=0;applyUltimate();
+  showToast(`Timer set to ${mins} minutes 🔥`);
+}
+function updatePomDisplay(){
+  const h=Math.floor(pomSecs/3600);const m=Math.floor((pomSecs%3600)/60);const s=pomSecs%60;
+  let timeStr;
+  if(pomMaxSecs>=3600){timeStr=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
+  else{timeStr=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
+  el('pomDisplay').textContent=timeStr;el('topbarTimer').textContent=h>0?String(h)+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'):String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  el('pomModeLabel').textContent=MODES[pomMode]?.label||pomMode;
+  const circ=591;const pct=pomMaxSecs>0?pomSecs/pomMaxSecs:0;
+  el('pomArc').style.strokeDashoffset=circ-(pct*circ);
+}
+function togglePom(){
+  if(pomRunning){pomRunning=false;pomInterruptions++;clearInterval(pomInterval);el('pomPlayBtn').textContent='▶';el('pomDot').style.display='none';}
+  else{
+    if(pomSecs<=0){resetPom();return;}
+    pomRunning=true;el('pomPlayBtn').textContent='⏸';el('pomDot').style.display='block';
+    checkBadge('first_session');
+    const h=new Date().getHours();if(h>=22)checkBadge('night_owl');if(h<7)checkBadge('early_bird');
+    pomInterval=setInterval(()=>{
+      if(pomSecs<=0){clearInterval(pomInterval);pomRunning=false;sessionComplete();return;}
+      pomSecs--;pomTodayMins=Math.floor((pomMaxSecs-pomSecs)/60);
+      el('pomMins').textContent=pomTodayMins;updatePomDisplay();
+    },1000);
+  }
+}
+function resetPom(){
+  clearInterval(pomInterval);pomRunning=false;
+  if(pomMode==='ultimate'){applyUltimate();}
+  else{pomSecs=MODES[pomMode].getMin()*60;pomMaxSecs=pomSecs;}
+  pomInterruptions=0;el('pomPlayBtn').textContent='▶';el('pomDot').style.display='none';
+  updatePomDisplay();showToast('Timer reset ↺');
+}
+function stopPom(){clearInterval(pomInterval);pomRunning=false;pomSecs=pomMaxSecs;pomInterruptions=0;el('pomPlayBtn').textContent='▶';el('pomDot').style.display='none';updatePomDisplay();showToast('Session stopped ■');}
+function pomSkipBack(){if(!pomRunning){resetPom();}}
+function pomSkip(){clearInterval(pomInterval);pomRunning=false;resetPom();}
+function sessionComplete(){
+  pomSessionCount++;el('pomSessions').textContent=pomSessionCount;
+  const mins=Math.round(pomMaxSecs/60);
+  const xp=pomMode==='ultimate'?Math.round(mins/2):pomMode==='pomodoro'?20:pomMode==='deep'?35:5;
+  S.user.xp+=xp;S.user.totalSessions++;S.user.totalMins+=mins;
+  const day=new Date().getDay();const idx=day===0?6:day-1;
+  S.weekData[idx]=(S.weekData[idx]||0)+mins;
+  const today=new Date().toDateString();
+  if(S.user.lastStudy!==today){
+    const yest=new Date(Date.now()-86400000).toDateString();
+    S.user.streak=S.user.lastStudy===yest?S.user.streak+1:1;
+    S.user.bestStreak=Math.max(S.user.bestStreak,S.user.streak);
+    S.user.lastStudy=today;
+  }
+  if(S.user.totalMins>=100)checkBadge('century');
+  checkBadge('streak_3');checkBadge('streak_7');checkBadge('streak_30');
+  const score=Math.max(0,Math.min(100,100-pomInterruptions*10));
+  el('pomScore').textContent=score;S.sessions.push({date:new Date().toISOString(),mode:pomMode,mins,xp,score});
+  save();showToast(`Session done! +${xp} XP 🎯`);beep();
+  if(pomMode!=='ultimate'){pomSecs=pomMaxSecs;pomInterruptions=0;updatePomDisplay();}
+  renderDotRow();
+}
+function renderDotRow(){
+  el('pomDots').innerHTML=Array(4).fill(0).map((_,i)=>`<div class="pom-dot ${i<pomSessionCount%4?'done':i===pomSessionCount%4&&pomRunning?'current':''}"></div>`).join('');
+}
+function renderFocusTaskSelect(){
+  const sel=el('pomTaskSelect');if(!sel)return;
+  const pending=S.tasks.filter(t=>t.status!=='done');
+  sel.innerHTML='<option value="">— Select a task —</option>'+pending.map(t=>`<option value="${t.id}">${t.title.substring(0,40)}</option>`).join('');
+}
+function saveFocusNotes(){const n=el('focusNotes').value.trim();if(!n)return;showToast('Notes saved 📝');}
+function beep(){try{const a=new(window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.setValueAtTime(523,a.currentTime);o.frequency.setValueAtTime(659,a.currentTime+.15);o.frequency.setValueAtTime(784,a.currentTime+.3);g.gain.setValueAtTime(.25,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.8);o.start(a.currentTime);o.stop(a.currentTime+.8);}catch(e){}}
+
+// ════════════════ MUSIC PLAYER ════════════════
+let playlist2=[],curTrack=0,isPlaying=false,audioEl=null,shuffleOn=false,sleepTimerRef=null;
+let visInterval=null;
+
+function loadMusicFiles(files){
+  Array.from(files).forEach(f=>{
+    const url=URL.createObjectURL(f);
+    playlist2.push({name:f.name.replace(/\.[^/.]+$/, ''),url,size:f.size});
+  });
+  renderPlaylist();
+  if(playlist2.length>0&&!isPlaying)loadTrack(0);
+  showToast(`${files.length} track(s) added 🎵`);
+  initVisBars();
+}
+function initVisBars(){
+  const v=el('visBars');
+  v.innerHTML=Array(24).fill(0).map((_,i)=>`<div class="vis-bar" style="height:${4+Math.random()*20}px;opacity:${isPlaying?1:.3}"></div>`).join('');
+}
+function animateVis(){
+  if(!isPlaying){document.querySelectorAll('.vis-bar').forEach(b=>b.style.height='4px');return;}
+  document.querySelectorAll('.vis-bar').forEach(b=>{b.style.height=(4+Math.random()*34)+'px';});
+}
+function loadTrack(i){
+  if(!playlist2[i])return;curTrack=i;
+  if(audioEl){audioEl.pause();audioEl.src='';}
+  audioEl=new Audio(playlist2[i].url);
+  audioEl.volume=(el('volSlider')?.value||80)/100;
+  audioEl.ontimeupdate=updateAudioProg;
+  audioEl.onended=()=>shuffleOn?loadTrack(Math.floor(Math.random()*playlist2.length)):nextTrack();
+  audioEl.onloadedmetadata=()=>{el('audioDur').textContent=fmtT(audioEl.duration);};
+  el('trackNameEl').textContent=playlist2[i].name;
+  el('trackArtistEl').textContent='Local File';
+  renderPlaylist();updateFocusMusicMini();
+  if(isPlaying){audioEl.play().catch(()=>{});}
+}
+function togglePlay(){
+  if(!audioEl&&playlist2.length>0)loadTrack(0);
+  if(!audioEl){showToast('Add music first 🎵','#f5a623');return;}
+  if(isPlaying){audioEl.pause();isPlaying=false;el('playPauseBtn').textContent='▶';el('eqBars').style.display='none';el('trackArtEl').classList.remove('playing');if(visInterval)clearInterval(visInterval);}
+  else{audioEl.play().catch(()=>{});isPlaying=true;el('playPauseBtn').textContent='⏸';el('eqBars').style.display='flex';el('trackArtEl').classList.add('playing');visInterval=setInterval(animateVis,100);}
+}
+function nextTrack(){loadTrack((curTrack+1)%playlist2.length);if(isPlaying){isPlaying=false;togglePlay();}}
+function prevTrack(){loadTrack((curTrack-1+playlist2.length)%playlist2.length);if(isPlaying){isPlaying=false;togglePlay();}}
+function setVol(v){if(audioEl)audioEl.volume=v/100;el('volPct').textContent=v+'%';}
+function updateAudioProg(){
+  if(!audioEl||!audioEl.duration)return;
+  const p=(audioEl.currentTime/audioEl.duration)*100;
+  el('audioProgress').style.width=p+'%';
+  el('audioCur').textContent=fmtT(audioEl.currentTime);
+}
+function seekAudio(e){
+  if(!audioEl||!audioEl.duration)return;
+  const r=e.currentTarget.getBoundingClientRect();
+  audioEl.currentTime=((e.clientX-r.left)/r.width)*audioEl.duration;
+}
+function fmtT(s){if(isNaN(s))return'0:00';return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');}
+function renderPlaylist(){
+  const el2=el('playlist');
+  if(playlist2.length===0){el2.innerHTML='<div style="text-align:center;padding:20px;font-size:12px;color:var(--tx3)">No tracks yet — add music from your device above 🎵</div>';return;}
+  el2.innerHTML=playlist2.map((t,i)=>`<div class="pl-item${i===curTrack?' playing':''}" onclick="loadTrack(${i});if(!isPlaying)togglePlay()">
+    <div class="pl-num">${i+1}</div>
+    ${i===curTrack&&isPlaying?`<div class="eq-bars" style="margin-right:4px"><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div></div>`:''}
+    <div class="pl-name">${t.name}</div>
+    <button onclick="removeTrack(${i});event.stopPropagation()" style="background:none;border:none;color:var(--tx3);cursor:pointer;font-size:12px;padding:2px 5px">✕</button>
+  </div>`).join('');
+}
+function removeTrack(i){playlist2.splice(i,1);if(curTrack>=playlist2.length)curTrack=0;renderPlaylist();}
+function clearPlaylist(){if(audioEl){audioEl.pause();}playlist2=[];isPlaying=false;el('playPauseBtn').textContent='▶';el('trackNameEl').textContent='No track loaded';el('trackArtistEl').textContent='Add music to begin';renderPlaylist();if(visInterval)clearInterval(visInterval);}
+function toggleShuffle(){shuffleOn=!shuffleOn;el('shuffleBtn').classList.toggle('on',shuffleOn);showToast(shuffleOn?'Shuffle on 🔀':'Shuffle off');}
+function selectMood(mood,btn){document.querySelectorAll('.genre-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');showToast(`${mood==='all'?'Showing all tracks':'Showing '+mood+' vibes'} 🎵`);}
+function setSleepTimer(){
+  const mins=parseInt(el('sleepTimerSel').value);
+  if(sleepTimerRef)clearTimeout(sleepTimerRef);
+  if(mins>0){sleepTimerRef=setTimeout(()=>{if(isPlaying)togglePlay();showToast('Sleep timer ended — music stopped 😴');},mins*60000);el('sleepTimerStatus').textContent=`Music will stop in ${mins} minutes`;}
+  else{el('sleepTimerStatus').textContent='Sleep timer off';}
+  showToast(mins>0?`Sleep timer: ${mins} min ⏰`:'Sleep timer off');
+}
+function updateFocusMusicMini(){
+  const fmm=el('focusMusicMini');if(!fmm)return;
+  if(playlist2.length===0){fmm.innerHTML=`<div style="font-size:12px;color:var(--tx3);text-align:center;padding:14px">No music · <span style="color:var(--teal);cursor:pointer" onclick="nav('music')">Open Music →</span></div>`;return;}
+  const t=playlist2[curTrack];
+  fmm.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--s2);border-radius:10px;border:1px solid var(--br)">
+    <div style="font-size:22px">${isPlaying?'🎵':'🎵'}</div>
+    <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t?t.name:'No track'}</div><div style="font-size:10px;color:var(--tx3)">Local file</div></div>
+    <button onclick="togglePlay()" style="background:${isPlaying?'var(--red)':'var(--teal)'};border:none;border-radius:6px;padding:5px 10px;color:#03070f;font-size:12px;font-weight:700;cursor:pointer">${isPlaying?'⏸':'▶'}</button>
+  </div>`;
+}
+
+// ════════════════ CALENDAR + TO-DO ════════════════
+let calDate2=new Date(),calSelected2=null,calTodoFilter2='all';
+function renderCalendar(){
+  const y=calDate2.getFullYear(),m=calDate2.getMonth();
+  el('calTitle').textContent=calDate2.toLocaleDateString('en',{month:'long',year:'numeric'});
+  const first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();
+  const today=new Date(),todayStr=today.toISOString().split('T')[0];
+  const allDates=[...S.tasks.filter(t=>t.dueDate).map(t=>t.dueDate),...S.calItems.map(e=>e.date)];
+  let html='';
+  for(let i=0;i<first;i++)html+=`<div class="cal-day other-month"></div>`;
+  for(let d=1;d<=days;d++){
+    const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isT=today.getFullYear()===y&&today.getMonth()===m&&today.getDate()===d;
+    const isSel=calSelected2===ds;const has=allDates.includes(ds);
+    html+=`<div class="cal-day${isT?' today':''}${isSel?' selected':''}${has?' has-item':''}" onclick="selectCalDay('${ds}')">${d}</div>`;
+  }
+  el('calGrid').innerHTML=html;
+  el('calDate').value=todayStr;
+  renderCalTodo();renderCalUpcoming();
+}
+function calNav(d){calDate2.setMonth(calDate2.getMonth()+d);renderCalendar();}
+function selectCalDay(date){
+  calSelected2=date;renderCalendar();
+  const items=[...S.tasks.filter(t=>t.dueDate===date),...S.calItems.filter(e=>e.date===date)];
+  el('calDayTitle').textContent='Items for '+new Date(date+'T12:00').toLocaleDateString('en',{weekday:'long',month:'long',day:'numeric'});
+  el('calDayCard').style.display='block';
+  el('calDate').value=date;
+  el('calDayItems').innerHTML=items.length?items.map(it=>`<div class="cal-todo-item">
+    <div class="cal-todo-cb${it.status==='done'?' done':''}" onclick="toggleCalItem('${it.id||''}','${it.dueDate?'task':'event'}')">${it.status==='done'?'✓':''}</div>
+    <div style="flex:1"><div class="cal-todo-text${it.status==='done'?' done-text':''}">${it.title||it.name}</div><div style="font-size:10px;color:var(--tx3)">${it.subject||''} ${it.type?'· '+it.type:''}</div></div>
+  </div>`).join(''):'<div style="font-size:12px;color:var(--tx3)">Nothing here yet.</div>';
+}
+function addCalItem(){
+  const date=el('calDate').value;const title=el('calTitle2').value.trim();
+  if(!date||!title){showToast('Enter date and title','#f4546a');return;}
+  const type=el('calType').value;
+  if(type==='task'){
+    // Add to tasks list too
+    const task={id:Date.now().toString(36),title,subject:el('calSubject').value,
+      priority:el('calPriority').value,dueDate:date,status:'todo',estimatedMins:null,createdAt:new Date().toISOString()};
+    S.tasks.unshift(task);
+  } else {
+    S.calItems.push({id:Date.now().toString(36),date,name:title,type,subject:el('calSubject').value,done:false});
+  }
+  save();el('calTitle2').value='';renderCalendar();showToast('Added to calendar 📅');
+}
+function renderCalTodo(){
+  const items=[
+    ...S.tasks.filter(t=>t.dueDate).map(t=>({...t,isTask:true,date:t.dueDate,name:t.title})),
+    ...S.calItems.map(e=>({...e,isTask:false}))
+  ].filter(i=>calTodoFilter2==='all'||calTodoFilter2==='pending'&&i.status!=='done'&&!i.done||calTodoFilter2==='done'&&(i.status==='done'||i.done))
+   .sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const tl=el('calTodoList');
+  tl.innerHTML=items.length?items.map(i=>`<div class="cal-todo-item">
+    <div class="cal-todo-cb${(i.status==='done'||i.done)?' done':''}" onclick="${i.isTask?`toggleTask('${i.id}')`:`toggleCalEvent('${i.id}')`}">${(i.status==='done'||i.done)?'✓':''}</div>
+    <div style="flex:1"><div class="cal-todo-text${(i.status==='done'||i.done)?' done-text':''}">${i.name||i.title}</div><div style="font-size:10px;color:var(--tx3)">${i.subject||''}</div></div>
+    <div class="cal-todo-date">${i.date||''}</div>
+    <button onclick="removeCalItem('${i.id}','${i.isTask}')" style="background:none;border:none;color:var(--tx3);cursor:pointer;font-size:12px;padding:2px 5px">✕</button>
+  </div>`).join(''):'<div style="font-size:12px;color:var(--tx3);text-align:center;padding:14px">No items. Add tasks or events above!</div>';
+}
+function toggleCalEvent(id){const item=S.calItems.find(i=>i.id===id);if(item)item.done=!item.done;save();renderCalendar();}
+function removeCalItem(id,isTask){
+  if(isTask==='true')S.tasks=S.tasks.filter(t=>t.id!==id);
+  else S.calItems=S.calItems.filter(e=>e.id!==id);
+  save();renderCalendar();
+}
+function calTodoFilter(f){
+  calTodoFilter2=f;
+  ['all','pending','done'].forEach(x=>{const b=el('ctf'+x.charAt(0).toUpperCase()+x.slice(1));if(!b)return;b.style.borderColor=x===f?'var(--teal)':'';b.style.color=x===f?'var(--teal)':'';});
+  renderCalTodo();
+}
+function renderCalUpcoming(){
+  const todayStr=new Date().toISOString().split('T')[0];
+  const items=[
+    ...S.tasks.filter(t=>t.dueDate&&t.dueDate>=todayStr&&t.status!=='done').map(t=>({...t,name:t.title,date:t.dueDate})),
+    ...S.calItems.filter(e=>e.date>=todayStr&&!e.done)
+  ].sort((a,b)=>a.date.localeCompare(b.date)).slice(0,6);
+  el('calUpcoming').innerHTML=items.length?items.map(i=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--s2);border-radius:8px;margin-bottom:6px;font-size:12px">
+    <span>${i.type==='exam'?'🎓':i.type==='deadline'?'⚠️':'📌'}</span>
+    <div style="flex:1"><div style="font-weight:500">${i.name||i.title}</div><div style="font-size:10px;color:var(--tx3)">${i.date}</div></div>
+  </div>`).join(''):'<div style="font-size:12px;color:var(--tx3)">No upcoming items</div>';
+}
+
+// ════════════════ ANALYTICS ════════════════
+function renderAnalytics(){
+  renderBarChart('analyticsChart','analyticsLabels',S.weekData);
+  const done=S.tasks.filter(t=>t.status==='done').length;
+  el('an-s').textContent=S.user.totalSessions;el('an-m').textContent=S.user.totalMins;
+  el('an-t').textContent=done;el('an-x').textContent=S.user.xp;
+  const cnt={};S.tasks.filter(t=>t.status==='done').forEach(t=>{cnt[t.subject]=(cnt[t.subject]||0)+1});
+  const tot=Object.values(cnt).reduce((a,b)=>a+b,0)||1;
+  el('analyticsSubjects').innerHTML=SUBJECTS.map(s=>{const c=cnt[s.name]||0;const p=Math.round((c/tot)*100);return `<div class="subj-bar"><div class="subj-bar-label">${s.name}</div><div class="subj-bar-track"><div class="subj-bar-fill" data-w="${p}" style="width:0%;background:${s.color}"></div></div><div class="subj-bar-pct">${p}%</div></div>`;}).join('');
+  setTimeout(()=>document.querySelectorAll('#analyticsSubjects .subj-bar-fill').forEach(b=>b.style.width=b.dataset.w+'%'),100);
+  renderBadges('analyticsBadges');
+  el('streakHistory').innerHTML=Array(30).fill(0).map((_,i)=>{const a=i>=(30-Math.min(S.user.streak,30));return `<div style="width:17px;height:17px;border-radius:3px;background:${a?'rgba(245,166,35,.4)':'var(--s2)'};border:1px solid ${a?'rgba(245,166,35,.4)':'var(--br)'}"></div>`;}).join('');
+}
+
+// ════════════════ GROUPS ════════════════
+function addCompetitor(){
+  const uid=el('compUID').value.trim().toUpperCase();if(!uid){showToast('Enter a UID','#f4546a');return;}
+  if(uid===S.user.uid){showToast("That's your own ID! 😄",'#f5a623');return;}
+  if(S.competitors.some(c=>c.uid===uid)){showToast('Already added','#f5a623');return;}
+  S.competitors.push({uid,name:'Study Buddy',avatar:'📚',xp:Math.floor(Math.random()*3000),streak:Math.floor(Math.random()*20)});
+  save();closeModal('addCompetitorModal');el('compUID').value='';renderGroups();showToast(`${uid} added as competitor ⚔️`);
+}
+function searchByUID(){
+  const uid=el('searchUID').value.trim().toUpperCase();const sr=el('searchResult');
+  if(!uid){sr.innerHTML='';return;}
+  if(uid===S.user.uid){sr.innerHTML=`<div style="background:var(--s2);border-radius:10px;padding:11px;border:1px solid var(--teal);font-size:12px">👤 That's you! Share this ID with friends.</div>`;return;}
+  const mock={name:'Study Buddy '+uid.slice(-3),uid,xp:Math.floor(Math.random()*2000),streak:Math.floor(Math.random()*15),level:Math.floor(Math.random()*8)+1};
+  sr.innerHTML=`<div style="background:var(--s2);border-radius:10px;padding:11px;border:1px solid var(--br2);margin-top:8px">
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">
+      <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--violet));display:flex;align-items:center;justify-content:center;font-size:14px">📚</div>
+      <div><div style="font-size:13px;font-weight:600">${mock.name}</div><div style="font-size:10px;color:var(--tx3);font-family:'JetBrains Mono',monospace">${mock.uid}</div></div>
+    </div>
+    <div style="display:flex;gap:7px;margin-bottom:9px">
+      <span style="font-size:10px;color:var(--teal)">⚡${mock.xp} XP</span>
+      <span style="font-size:10px;color:var(--amber)">🔥${mock.streak}d</span>
+      <span style="font-size:10px;color:var(--violet)">Lv ${mock.level}</span>
+    </div>
+    <div style="display:flex;gap:7px">
+      <button class="btn btn-ghost btn-sm" onclick="el('compUID').value='${mock.uid}';openModal('addCompetitorModal')">⚔️ Compete</button>
+      <button class="btn btn-ghost btn-sm" onclick="showToast('Invite sent! 📨')">📨 Invite</button>
+    </div>
+  </div>`;
+}
+function initGrpEmojis(){
+  const ep=el('grpEmojiPicker');if(!ep)return;
+  ep.innerHTML=EMOJIS.map((e,i)=>`<div onclick="selGrpEmoji(this)" class="${i===0?'sel-ge':''}" style="width:30px;height:30px;border-radius:7px;background:${i===0?'rgba(14,207,201,.15)':'var(--s2)'};border:1px solid ${i===0?'var(--teal)':'var(--br2)'};display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;transition:all .18s">${e}</div>`).join('');
+}
+function selGrpEmoji(e){
+  document.querySelectorAll('#grpEmojiPicker div').forEach(d=>{d.style.background='var(--s2)';d.style.borderColor='var(--br2)';d.classList.remove('sel-ge');});
+  e.style.background='rgba(14,207,201,.15)';e.style.borderColor='var(--teal)';e.classList.add('sel-ge');
+}
+
+// ════════════════ PROFILE ════════════════
+function renderProfile(){
+  const u=S.user;const lvl=getLevel(u.xp);const prog=getLvlProg(u.xp);
+  el('profileAvatar').textContent=u.avatar;el('profileName').textContent=u.name;
+  el('profileLvlLabel').textContent=`Level ${lvl.l} · ${lvl.t}`;
+  el('profileUID').textContent=u.uid;el('editName').value=u.name;
+  el('profileLvlTitle').textContent=lvl.t;el('profileXP').textContent=u.xp;
+  el('profileStreak').textContent=u.streak;el('profileTasks').textContent=S.tasks.filter(t=>t.status==='done').length;
+  el('profileXPNext').textContent=prog.toNext+' XP to next level';
+  el('xpLvlP').textContent=lvl.l;el('xpPctP').textContent=prog.pct+'%';
+  el('xpBarP').style.width=prog.pct+'%';
+  const c=233;el('xpArcP').style.strokeDashoffset=c-(prog.pct/100)*c;
+  el('ps-s').textContent=u.totalSessions;el('ps-m').textContent=u.totalMins;
+  el('ps-b').textContent=u.bestStreak;el('ps-g').textContent=S.groups.length;
+  renderBadges('profileBadges');
+  const ap=el('avatarPicker');
+  if(ap)ap.innerHTML=EMOJIS.map(e=>`<div onclick="selAvatar('${e}')" style="width:33px;height:33px;border-radius:7px;background:${u.avatar===e?'rgba(14,207,201,.15)':'var(--s2)'};border:1px solid ${u.avatar===e?'var(--teal)':'var(--br2)'};display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;transition:all .18s">${e}</div>`).join('');
+}
+function selAvatar(e){S.user.avatar=e;save();renderProfile();}
+function saveProfile(){const n=el('editName').value.trim();if(!n){showToast('Name needed','#f4546a');return;}S.user.name=n;save();renderProfile();renderDash();showToast('Profile saved ✅');}
+function copyUID(){
+  navigator.clipboard.writeText(S.user.uid).then(()=>showToast('UID copied! 📋')).catch(()=>showToast('Your UID: '+S.user.uid,'#c9a84c'));
+  el('copyHint').textContent='✅ Copied!';setTimeout(()=>{el('copyHint').textContent='📋 Copy';},2000);
+}
+function renderBadges(targetId){
+  const e=el(targetId);if(!e)return;
+  e.innerHTML=BADGES.map(b=>`<div class="badge-item${S.user.earnedBadges.includes(b.id)?' earned':' locked'}" title="${b.name}"><div class="badge-emoji">${b.emoji}</div><div class="badge-name">${b.name}</div></div>`).join('');
+}
+
+// ════════════════ BADGES ════════════════
+function checkBadge(id){
+  if(S.user.earnedBadges.includes(id))return;
+  const elig={
+    first_session:()=>S.user.totalSessions>=1,streak_3:()=>S.user.streak>=3,
+    streak_7:()=>S.user.streak>=7,streak_30:()=>S.user.streak>=30,
+    century:()=>S.user.totalMins>=100,task_master:()=>S.tasks.filter(t=>t.status==='done').length>=10,
+    night_owl:()=>true,early_bird:()=>true,ai_explorer:()=>true,social:()=>S.groups.length>=1,
+  };
+  if(elig[id]&&elig[id]()){
+    S.user.earnedBadges.push(id);save();
+    const b=BADGES.find(x=>x.id===id);
+    if(b)setTimeout(()=>showToast(`Badge: ${b.emoji} ${b.name}!`,'#c9a84c'),600);
+  }
+}
+
+// ════════════════ SETTINGS ════════════════
+function loadSettings(){
+  el('set-pom').value=S.settings.pom||25;el('set-short').value=S.settings.short||5;
+  el('set-long').value=S.settings.long||15;el('set-deep').value=S.settings.deep||90;
+  el('set-goal').value=S.settings.goal||90;el('set-name').value=S.user.name;
+}
+function saveSettings(){
+  S.settings={pom:+el('set-pom').value||25,short:+el('set-short').value||5,long:+el('set-long').value||15,deep:+el('set-deep').value||90,goal:+el('set-goal').value||90};
+  const n=el('set-name').value.trim();if(n)S.user.name=n;
+  save();showToast('Settings saved ✅');
+}
+function clearData(){if(confirm('Reset ALL data? This cannot be undone.')){localStorage.removeItem('sf3');S=getS();renderDash();showToast('Data reset ✅');}}
+
+// ════════════════ AI ════════════════
+const AI_R={
+  quiz:'🧩 What subject? E.g. "Quiz me on Python functions" or "Test me on WW2".',
+  flashcard:'🗂️ Tell me the topic and I\'ll generate flashcard pairs. E.g. "Flashcards for the water cycle".',
+  explain:'💡 What would you like explained? Try "Explain recursion simply" or "How does photosynthesis work?".',
+  plan:'📋 Tell me: (1) Subject (2) Deadline (3) Daily hours available. I\'ll create a structured plan.',
+  pomodoro:'⏱️ Optimal strategy:\n🍅 25 min focus → ☕ 5 min break × 4 → 🛋️ 15 min long break\n\nTips: one task per session, silence notifications, write distracting thoughts on paper.',
+};
+function sendAiMsg(){
+  const inp=el('aiInput'),msg=inp.value.trim();if(!msg)return;inp.value='';
+  const msgs=el('aiMessages');
+  msgs.innerHTML+=`<div class="ai-msg user">${msg}</div>`;msgs.scrollTop=msgs.scrollHeight;
+  checkBadge('ai_explorer');
+  setTimeout(()=>{
+    const lc=msg.toLowerCase();
+    let r;
+    if(lc.includes('quiz')||lc.includes('test'))r='🧩 Quiz time!\n\n1. What is the quadratic formula?\n2. Explain Newton\'s 2nd Law.\n3. What does "recursion" mean in programming?\n\nType your answers!';
+    else if(lc.includes('explain')||lc.includes('what is'))r='💡 Great question! Here\'s a breakdown:\n\n• Start with the core concept\n• Build to the complex parts\n• Apply with real examples\n\nWant me to go deeper on any part?';
+    else if(lc.includes('plan')||lc.includes('schedule'))r='📋 Study Plan:\n\nWeek 1: Cover 30% of material\nWeek 2: Practice problems\nWeek 3: Mock tests\nWeek 4: Final review\n\nAdjust based on your deadline!';
+    else if(lc.includes('help'))r='🤝 Happy to help! Break the problem into:\n1. What do you already know?\n2. Where exactly are you stuck?\n3. Have you tried an example?\n\nShare more details!';
+    else{const rs=['📚 Interesting question! Could you give me more context about what you\'ve tried?','💡 Let me think through that with you. What specific part is confusing?','🧠 Good topic! Start simple, build complexity, then test yourself.','✏️ Let\'s approach this systematically. What\'s your current understanding?'];r=rs[Math.floor(Math.random()*rs.length)];}
+    msgs.innerHTML+=`<div class="ai-msg bot">${r.replace(/\n/g,'<br>')}</div>`;msgs.scrollTop=msgs.scrollHeight;
+  },600);
+}
+function aiTool(t){const msgs=el('aiMessages');msgs.innerHTML+=`<div class="ai-msg user">/${t}</div>`;setTimeout(()=>{msgs.innerHTML+=`<div class="ai-msg bot">${(AI_R[t]||'How can I help?').replace(/\n/g,'<br>')}</div>`;msgs.scrollTop=msgs.scrollHeight;},400);}
+function loadStudyFile(inp){const f=inp.files[0];if(!f)return;el('fileInfo').textContent=`✅ ${f.name} (${Math.round(f.size/1024)}kb)`;const msgs=el('aiMessages');msgs.innerHTML+=`<div class="ai-msg user">I uploaded "${f.name}"</div>`;setTimeout(()=>{msgs.innerHTML+=`<div class="ai-msg bot">📄 Got it! I can:\n• 📋 Summarise key points\n• 🧩 Create a quiz\n• 🗂️ Generate flashcards\n• 📖 Explain difficult sections\n\nWhat would you like?`.replace(/\n/g,'<br>')+'</div>';msgs.scrollTop=msgs.scrollHeight;},500);checkBadge('ai_explorer');}
+
+// ════════════════ CLEAR AI ════════════════
+function clearAiChat(){
+  el('aiMessages').innerHTML='<div class="ai-msg bot">👋 Hi! Ask me anything — explain topics, make quizzes, build flashcards, or plan your schedule.</div>';
+}
+
+// ════════════════ GROUP CHAT ════════════════
+let activeChatGroup=null;
+// messages stored in S.groupMessages = { groupId: [{id,sender,avatar,text,ts,isMe}] }
+
+function renderGroups(){
+  renderGroupsSide();
+  renderCompetitorsSide();
+}
+
+function renderGroupsSide(){
+  const gl=el('groupListSide');if(!gl)return;
+  if(S.groups.length===0){
+    gl.innerHTML=`<div style="font-size:12px;color:var(--tx3);padding:8px">No groups yet</div>`;
+    return;
+  }
+  gl.innerHTML=S.groups.map(g=>{
+    const msgs=(S.groupMessages||{})[g.id]||[];
+    const unread=msgs.filter(m=>!m.isMe&&!m.read).length;
+    const last=msgs[msgs.length-1];
+    const isActive=activeChatGroup&&activeChatGroup.id===g.id;
+    return `<div class="grp-side-item${isActive?' active':''}" onclick="openGroupChat('${g.id}')" style="margin-bottom:6px">
+      <div style="font-size:20px;flex-shrink:0">${g.emoji}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.name}</div>
+        <div style="font-size:10px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${last?last.text.substring(0,28)+'…':g.subject}</div>
+      </div>
+      ${unread>0?`<div class="grp-side-badge">${unread}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function renderCompetitorsSide(){
+  const cl=el('competitorListSide');if(!cl)return;
+  if(S.competitors.length===0){cl.innerHTML='<div style="font-size:12px;color:var(--tx3);padding:4px 0">No competitors yet</div>';return;}
+  cl.innerHTML=S.competitors.map(c=>`<div class="comp-side-item">
+    <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--violet));display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">${c.avatar||'📚'}</div>
+    <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600">${c.name}</div><div style="font-size:10px;color:var(--tx3)">⚡${c.xp||0} · 🔥${c.streak||0}d</div></div>
+    <div style="font-size:9px;color:var(--red);font-weight:700;border:1px solid rgba(244,84,106,.3);border-radius:4px;padding:1px 5px">VS</div>
+    <button onclick="removeComp('${c.uid}');event.stopPropagation()" style="background:none;border:none;color:var(--tx3);cursor:pointer;font-size:12px;padding:2px 4px">✕</button>
+  </div>`).join('');
+}
+
+function openGroupChat(groupId){
+  const g=S.groups.find(x=>x.id===groupId);if(!g)return;
+  activeChatGroup=g;
+  // Mark messages read
+  if(!S.groupMessages)S.groupMessages={};
+  if(!S.groupMessages[groupId])S.groupMessages[groupId]=[];
+  S.groupMessages[groupId].forEach(m=>m.read=true);
+  save();
+  // Update header
+  el('chatGroupEmoji').textContent=g.emoji;
+  el('chatGroupName').textContent=g.name;
+  el('chatGroupMeta').textContent=`📚 ${g.subject} · 👥 ${g.members} member${g.members!==1?'s':''} · Code: ${g.code}`;
+  el('chatOnline').innerHTML=`<div style="width:7px;height:7px;border-radius:50%;background:var(--green)"></div> ${Math.floor(Math.random()*g.members)+1} online`;
+  el('noChatSel').style.display='none';
+  el('chatMessages').style.display='flex';
+  el('chatInputArea').style.display='block';
+  renderChatMessages(groupId);
+  renderGroupsSide();
+  el('chatInput').focus();
+}
+
+function renderChatMessages(groupId){
+  if(!S.groupMessages)S.groupMessages={};
+  const msgs=S.groupMessages[groupId]||[];
+  const box=el('chatMessages');
+  if(msgs.length===0){
+    box.innerHTML=`<div class="chat-system">No messages yet — say hello! 👋</div>`;
+    return;
+  }
+  let html='',lastDate='';
+  msgs.forEach(m=>{
+    const d=new Date(m.ts).toLocaleDateString('en',{weekday:'short',month:'short',day:'numeric'});
+    if(d!==lastDate){html+=`<div class="chat-date-sep">${d}</div>`;lastDate=d;}
+    const time=new Date(m.ts).toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
+    if(m.isSystem){html+=`<div class="chat-system">${m.text}</div>`;}
+    else if(m.isMe){
+      html+=`<div class="chat-bubble mine">
+        <div class="chat-bubble-inner">${escHtml(m.text)}</div>
+        <div class="chat-meta">${time} · You ✓</div>
+      </div>`;
+    } else {
+      html+=`<div class="chat-bubble theirs">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+          <div style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#0ecfc9,#9b7af4);display:flex;align-items:center;justify-content:center;font-size:10px">${m.avatar||'📚'}</div>
+          <div style="font-size:11px;color:var(--tx3);font-weight:600">${m.sender||'Member'}</div>
+        </div>
+        <div class="chat-bubble-inner">${escHtml(m.text)}</div>
+        <div class="chat-meta">${time}</div>
+      </div>`;
+    }
+  });
+  box.innerHTML=html;
+  box.scrollTop=box.scrollHeight;
+}
+
+function escHtml(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
+
+function sendChatMsg(){
+  if(!activeChatGroup){showToast('Select a group first','#f5a623');return;}
+  const inp=el('chatInput');const text=inp.value.trim();if(!text)return;
+  pushChatMsg(activeChatGroup.id,text,true);
+  inp.value='';inp.style.height='auto';
+  // Simulate reply after a delay
+  const replies=['📚 Great point!','💡 Interesting, I was just thinking about that!','✅ Got it, thanks!','🔥 Let\'s keep going!','❓ Can you explain more?','👍 Agreed!','🧠 Good idea, let\'s try that approach','☕ Taking a 5 min break then back to it'];
+  const memberNames=['Alex','Sam','Jordan','Taylor','Morgan','Riley'];
+  const avatars=['🦁','🐉','🌟','🚀','💎','📖'];
+  if(Math.random()>0.3){
+    const delay=1500+Math.random()*3000;
+    el('typingIndicator').style.display='block';
+    el('typingIndicator').textContent=memberNames[Math.floor(Math.random()*memberNames.length)]+' is typing…';
+    setTimeout(()=>{
+      el('typingIndicator').style.display='none';
+      const idx=Math.floor(Math.random()*memberNames.length);
+      pushChatMsg(activeChatGroup.id,replies[Math.floor(Math.random()*replies.length)],false,memberNames[idx],avatars[idx]);
+    },delay);
+  }
+}
+
+function sendQuick(text){
+  if(!activeChatGroup){showToast('Select a group first','#f5a623');return;}
+  pushChatMsg(activeChatGroup.id,text,true);
+}
+
+function pushChatMsg(groupId,text,isMe,sender,avatar){
+  if(!S.groupMessages)S.groupMessages={};
+  if(!S.groupMessages[groupId])S.groupMessages[groupId]=[];
+  S.groupMessages[groupId].push({id:Date.now().toString(36),text,isMe,sender:sender||S.user.name,avatar:avatar||S.user.avatar,ts:new Date().toISOString(),read:isMe});
+  save();
+  renderChatMessages(groupId);
+  renderGroupsSide();
+}
+
+function chatKeydown(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChatMsg();}
+}
+
+function sendChatImg(){showToast('Image sharing coming soon 📎','#c9a84c');}
+
+// Override createGroup to add welcome message
+const _origCreateGroup=typeof createGroup==='function'?createGroup:null;
+function createGroup(){
+  const name=el('grpName').value.trim();if(!name){showToast('Enter a group name','#f4546a');return;}
+  const sel=document.querySelector('#grpEmojiPicker .sel-ge');
+  const group={id:Date.now().toString(36),name,desc:el('grpDesc').value,emoji:sel?sel.textContent:'📚',subject:el('grpSubject').value,code:Math.random().toString(36).substr(2,8).toUpperCase(),members:1,createdAt:new Date().toISOString()};
+  S.groups.push(group);
+  // Welcome message
+  if(!S.groupMessages)S.groupMessages={};
+  S.groupMessages[group.id]=[{id:'w1',text:`🎉 Welcome to ${name}! This is the group chat. Share thoughts, ask questions, and study together!`,isSystem:true,ts:new Date().toISOString()}];
+  save();closeModal('createGroupModal');el('grpName').value='';el('grpDesc').value='';
+  renderGroups();checkBadge('social');showToast(`"${name}" created! Code: ${group.code} 👥`);
+  openGroupChat(group.id);
+}
+
+function joinGroup(){
+  const code=el('joinCode').value.trim().toUpperCase();if(!code){showToast('Enter a code','#f4546a');return;}
+  if(S.groups.some(g=>g.code===code)){showToast('Already in this group!','#f5a623');return;}
+  const g={id:Date.now().toString(36),name:'Study Group #'+code.slice(-3),desc:'Joined via invite',emoji:'📚',subject:'General',code,members:Math.floor(Math.random()*8)+2,createdAt:new Date().toISOString()};
+  S.groups.push(g);
+  if(!S.groupMessages)S.groupMessages={};
+  S.groupMessages[g.id]=[{id:'j1',text:`📨 ${S.user.name} joined the group!`,isSystem:true,ts:new Date().toISOString()}];
+  save();closeModal('joinGroupModal');el('joinCode').value='';renderGroups();checkBadge('social');showToast('Joined group! 👥');
+  openGroupChat(g.id);
+}
+
+function leaveGroup(id){
+  if(activeChatGroup&&activeChatGroup.id===id){
+    activeChatGroup=null;el('noChatSel').style.display='flex';el('chatMessages').style.display='none';el('chatInputArea').style.display='none';
+  }
+  S.groups=S.groups.filter(g=>g.id!==id);save();renderGroups();showToast('Left group');
+}
+// ═══════════════════════════════════════════
+function el(id){return document.getElementById(id);}
+function setText(id,v){const e=el(id);if(e)e.textContent=v;}
+function setAttr(id,attr,v){const e=el(id);if(e)e.setAttribute(attr,v);}
+function openModal(id){const m=el(id);if(m)m.classList.add('open');}
+function closeModal(id){const m=el(id);if(m)m.classList.remove('open');}
+function showToast(msg,color){const t=el('toast');t.style.borderColor=color||'var(--green)';el('toastMsg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open');}));
+
+// ════════════════ INIT ════════════════
+document.addEventListener('DOMContentLoaded',()=>{
+  S=getS();
+
+  // Ensure every user has a unique UID
+  if(!S.user.uid || S.user.uid==='SF-XXXXXX'){S.user.uid=genUID();save();}
+
+  renderDash();loadSettings();renderDotRow();initGrpEmojis();initVisBars();
+  // Init timer display
+  pomSecs=(S.settings.pom||25)*60;pomMaxSecs=pomSecs;updatePomDisplay();
+  // Set today's date in calendar form
+  const today=new Date().toISOString().split('T')[0];
+  if(el('calDate'))el('calDate').value=today;
+});
+</script>
+</body>
+</html>
